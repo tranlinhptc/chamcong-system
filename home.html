@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trang chủ — Chấm công</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="card" style="max-width:500px">
+  <h1>🏠 Trang Chủ</h1>
+  <p class="sub">Chào mừng bạn đã đăng nhập</p>
+
+  <div id="userBox" class="user-box">Đang tải...</div>
+
+  <p style="color:#666; font-size:13px; margin-bottom:16px; text-align:center">
+    🚧 Giai đoạn 1 hoàn thành. Các chức năng chấm công / báo cáo sẽ có ở GĐ 2.
+  </p>
+
+  <button class="logout" onclick="doLogout()">Đăng xuất</button>
+  <div id="msg" class="msg"></div>
+</div>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script>
+  const token = sessionStorage.getItem('token');
+  if (!token) location.href = 'index.html';
+
+  async function loadUser() {
+    try {
+      const r = await API.getUserInfo(token);
+      if (!r.ok) { location.href = 'index.html'; return; }
+      document.getElementById('userBox').innerHTML =
+        `<b>👤 ${r.user.hoTen}</b><br>
+         <span style="color:#666">Tên ĐN:</span> ${r.user.username}<br>
+         <span style="color:#666">Email:</span> ${r.user.email}<br>
+         <span style="color:#666">Vai trò:</span> ${r.user.vaiTro}`;
+    } catch(e) {
+      document.getElementById('userBox').textContent = 'Lỗi tải thông tin: ' + e.message;
+    }
+  }
+
+  async function doLogout() {
+    await API.logout(token);
+    sessionStorage.clear();
+    location.href = 'index.html';
+  }
+
+  loadUser();
+</script>
+</body>
+</html>
