@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Đăng nhập — Chấm công</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="card">
+  <h1>🕒 Chấm Công</h1>
+  <p class="sub">Hệ thống chấm công &amp; công tác</p>
+
+  <label for="username">Tên đăng nhập</label>
+  <input id="username" type="text" placeholder="vd: vanA" autocomplete="username">
+
+  <label for="password">Mật khẩu</label>
+  <input id="password" type="password" placeholder="••••" autocomplete="current-password">
+
+  <button id="btnLogin" onclick="doLogin()">Đăng nhập</button>
+  <div id="msg" class="msg"></div>
+</div>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script>
+  // Nếu đã login rồi → vào home
+  if (sessionStorage.getItem('token')) {
+    location.href = 'home.html';
+  }
+
+  async function doLogin() {
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value;
+    const btn = document.getElementById('btnLogin');
+    const msg = document.getElementById('msg');
+
+    if (!u || !p) { msg.className='msg err'; msg.textContent='Nhập đủ tên và mật khẩu'; return; }
+
+    btn.disabled = true; btn.textContent = 'Đang đăng nhập...';
+    msg.textContent = '';
+
+    try {
+      const r = await API.login(u, p);
+      if (r.ok) {
+        sessionStorage.setItem('token', r.token);
+        sessionStorage.setItem('user', JSON.stringify(r.user));
+        msg.className = 'msg ok';
+        msg.textContent = '✅ Đăng nhập thành công!';
+        setTimeout(() => location.href = 'home.html', 500);
+      } else {
+        msg.className = 'msg err';
+        msg.textContent = '❌ ' + r.msg;
+      }
+    } catch (e) {
+      msg.className = 'msg err';
+      msg.textContent = '❌ Lỗi kết nối: ' + e.message;
+    } finally {
+      btn.disabled = false; btn.textContent = 'Đăng nhập';
+    }
+  }
+
+  document.getElementById('password').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+</script>
+</body>
+</html>
