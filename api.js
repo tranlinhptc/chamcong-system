@@ -1,5 +1,5 @@
 // Cấu hình URL backend (GAS Web App)
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxqcQk3IX2zaDsjdBq76F3uMpVjCU5_nVDjTQ_vgYZUnpS_zsQewSwQnQraqhCvHU36/exec';
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbyhnEPOy8x9rMJZ75z1ajlWMeaCZAz7lF3z4vWxPg5vXd0OznSBKvSEmZqcuU0lLBZO/exec';
 
 async function callAPI(action, payload = {}) {
   const body = JSON.stringify({ action, ...payload });
