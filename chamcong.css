@@ -1,0 +1,441 @@
+/* =====================================================
+   CHAMCONG.CSS - Style riêng cho bảng chấm công
+   ===================================================== */
+
+body.page-chamcong {
+  background: #f0f2f5;
+  display: block;
+  padding: 0;
+  min-height: 100vh;
+}
+
+/* ---- TOPBAR ---- */
+.topbar {
+  background: #1a73e8;
+  color: white;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar-left { display: flex; align-items: center; gap: 10px; }
+.topbar-left .logo { font-size: 22px; }
+.topbar-left .title { font-size: 18px; font-weight: 600; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.user-info { font-size: 14px; opacity: 0.95; }
+
+/* ---- TOOLBAR ---- */
+.toolbar {
+  background: white;
+  padding: 12px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid #e0e0e0;
+  position: sticky;
+  top: 52px;
+  z-index: 99;
+}
+.toolbar label { font-size: 14px; font-weight: 500; color: #333; margin-right: 4px; }
+.toolbar input[type="month"] {
+  padding: 7px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: #e0e0e0;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.15s;
+  font-family: inherit;
+}
+.btn:hover { background: #d0d0d0; }
+.btn-sm { padding: 6px 12px; font-size: 13px; }
+.btn-primary { background: #1a73e8; color: white; }
+.btn-primary:hover { background: #0d5bcf; }
+.btn-primary:disabled { background: #999; cursor: not-allowed; }
+.btn-success { background: #2e7d32; color: white; }
+.btn-success:hover { background: #1b5e20; }
+.btn-danger { background: #c62828; color: white; }
+.btn-danger:hover { background: #8e0000; }
+
+.status-msg { font-size: 13px; margin-left: auto; color: #666; }
+.status-msg.ok { color: #2e7d32; font-weight: 600; }
+.status-msg.err { color: #c62828; font-weight: 600; }
+
+/* ---- INFO BAR ---- */
+.info-bar {
+  background: #fff8e1;
+  border-left: 4px solid #f57c00;
+  padding: 10px 20px;
+  font-size: 13px;
+  color: #5d4037;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.badge {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.badge.user { background: #e3f2fd; color: #1565c0; }
+.badge.approver { background: #e8f5e9; color: #2e7d32; }
+
+/* ---- TABLE WRAP ---- */
+.table-wrap {
+  overflow: auto;
+  max-height: calc(100vh - 200px);
+  margin: 10px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+table#mainTable {
+  border-collapse: collapse;
+  font-size: 12px;
+  min-width: max-content;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+table#mainTable th,
+table#mainTable td {
+  border: 1px solid #cfd8dc;
+  padding: 2px 4px;
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Header rows */
+table#mainTable thead tr.title-row th {
+  background: #e3f2fd;
+  color: #0d47a1;
+  font-weight: 600;
+  padding: 6px 8px;
+}
+table#mainTable thead tr.title-row th.left {
+  text-align: left;
+  font-size: 13px;
+}
+
+table#mainTable thead tr.sub-title th {
+  background: #bbdefb;
+  color: #0d47a1;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+table#mainTable thead tr.day-header th {
+  background: #1a73e8;
+  color: white;
+  font-weight: 600;
+  min-width: 34px;
+  font-size: 12px;
+}
+
+table#mainTable thead tr.thu-header th {
+  background: #64b5f6;
+  color: white;
+  font-weight: 600;
+  font-size: 11px;
+  padding: 3px 2px;
+}
+table#mainTable thead tr.thu-header th.cn {
+  background: #ef5350;
+}
+table#mainTable thead tr.thu-header th.t7 {
+  background: #ff9800;
+}
+
+/* Group headers Quy ra công */
+table#mainTable thead tr.group-header th {
+  background: #f9a825;
+  color: #4a2800;
+  font-weight: 700;
+  font-size: 11px;
+  padding: 4px;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  height: 130px;
+  min-width: 26px;
+  white-space: nowrap;
+}
+table#mainTable thead tr.group-header th.stt-col {
+  writing-mode: horizontal-tb;
+  background: #1a73e8;
+  color: white;
+  height: auto;
+}
+table#mainTable thead tr.group-header th.name-col {
+  writing-mode: horizontal-tb;
+  background: #1a73e8;
+  color: white;
+}
+
+/* Body */
+table#mainTable tbody td.stt-cell {
+  background: #f5f5f5;
+  font-weight: 600;
+}
+table#mainTable tbody td.name-cell {
+  background: #fafafa;
+  text-align: left;
+  font-weight: 500;
+  padding: 4px 8px;
+  min-width: 160px;
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  box-shadow: 1px 0 0 #cfd8dc;
+}
+table#mainTable tbody td.ma-cell {
+  background: #f5f5f5;
+  font-size: 11px;
+  padding: 4px 6px;
+  position: sticky;
+  left: 0;
+  z-index: 5;
+}
+table#mainTable tbody td.chucdanh-cell {
+  background: #f5f5f5;
+  font-size: 11px;
+  position: sticky;
+  z-index: 5;
+}
+
+table#mainTable tbody tr:hover { background: #f5f9ff; }
+
+/* Day cells */
+.day-cell {
+  cursor: default;
+  min-width: 34px;
+  height: 26px;
+  font-weight: 600;
+  font-size: 11px;
+  transition: 0.1s;
+}
+.day-cell.editable { cursor: pointer; }
+.day-cell.editable:hover {
+  outline: 2px solid #1a73e8;
+  outline-offset: -2px;
+}
+
+/* Màu theo ký hiệu */
+.day-cell.ky-plus      { background: #e8f5e9; color: #1b5e20; }   /* + */
+.day-cell.ky-ct        { background: #fff9c4; color: #827717; }   /* ct */
+.day-cell.ky-scl       { background: #ffb74d; color: #4a2800; }   /* SCL - cam đậm */
+.day-cell.ky-dtxd      { background: #ff8a65; color: #3e1a00; }   /* ĐTXD - cam đỏ */
+.day-cell.ky-ca        { background: #b2dfdb; color: #004d40; }   /* C1,C2,C3 */
+.day-cell.ky-hoc       { background: #d1c4e9; color: #311b92; }   /* H1,H2,H3 */
+.day-cell.ky-nghi      { background: #eceff1; color: #455a64; }   /* NB,P,Ô,NM */
+.day-cell.ky-le        { background: #ffcdd2; color: #b71c1c; }   /* L, BL */
+.day-cell.ky-khac      { background: #f5f5f5; color: #616161; }
+.day-cell.selected     { outline: 3px solid #1a73e8; outline-offset: -2px; }
+.day-cell.dirty        { box-shadow: inset 0 0 0 2px #2e7d32; }
+
+/* Quy ra công columns */
+.qrc-col {
+  background: #fffde7;
+  font-weight: 600;
+  min-width: 32px;
+  padding: 4px 6px;
+}
+.qrc-col.total {
+  background: #ffecb3;
+  color: #e65100;
+  font-weight: 700;
+}
+.qrc-col.note {
+  background: #fafafa;
+  text-align: left;
+  font-weight: normal;
+  min-width: 100px;
+}
+
+/* Footer */
+table#mainTable tfoot td {
+  background: #ffecb3;
+  font-weight: 700;
+  color: #e65100;
+  padding: 6px 4px;
+}
+table#mainTable tfoot td.label {
+  text-align: right;
+  padding-right: 10px;
+}
+
+.loading {
+  padding: 40px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+/* ---- MODAL ---- */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.show { display: flex; }
+
+.modal {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 440px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  animation: popIn 0.2s ease;
+}
+.modal-wide { max-width: 720px; }
+
+@keyframes popIn {
+  from { transform: scale(0.92); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.modal-head {
+  padding: 14px 18px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-head h3 {
+  font-size: 16px;
+  color: #1a73e8;
+  margin: 0;
+}
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #999;
+  cursor: pointer;
+  padding: 0 6px;
+  font-family: inherit;
+}
+.modal-close:hover { color: #333; }
+
+.modal-body {
+  padding: 18px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.field { margin-bottom: 14px; }
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 5px;
+}
+.field input[type="text"],
+.field input[type="time"],
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: 0.15s;
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
+}
+.field textarea { resize: vertical; }
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.calc-preview {
+  background: #f0f7ff;
+  border-left: 4px solid #1a73e8;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #0d47a1;
+  margin-top: 10px;
+  line-height: 1.6;
+}
+.calc-preview b { color: #e65100; }
+
+.modal-foot {
+  padding: 12px 18px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Legend */
+.legend-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+.legend-item {
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  border: 1px solid #e0e0e0;
+}
+.legend-item .ky {
+  font-weight: 700;
+  display: inline-block;
+  min-width: 44px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-right: 6px;
+}
+.legend-item .ten { color: #333; }
+.legend-section {
+  grid-column: 1 / -1;
+  font-weight: 700;
+  color: #1a73e8;
+  margin-top: 12px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #e3f2fd;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .topbar-left .title { display: none; }
+  .user-info { display: none; }
+  .toolbar { padding: 8px 10px; }
+}
