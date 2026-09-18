@@ -439,3 +439,35 @@ table#mainTable tfoot td.label {
   .user-info { display: none; }
   .toolbar { padding: 8px 10px; }
 }
+/* ==== Ngày lễ, T7, CN trong bảng ==== */
+table#mainTable thead tr.thu-header th.le {
+  background: #c62828 !important;
+  color: white;
+  font-weight: 700;
+}
+table#mainTable thead tr.thu-header th.bu {
+  background: #78909c !important;
+  color: white;
+}
+
+/* Ô ngày lễ có nền hồng nhạt */
+table#mainTable tbody td.day-cell.ngay-le {
+  background: #ffebee !important;
+}
+table#mainTable tbody td.day-cell.ngay-t7 {
+  background: #fff3e0 !important;
+}
+table#mainTable tbody td.day-cell.ngay-cn {
+  background: #fce4ec !important;
+}
+
+/* Preview chi tiết */
+.calc-preview hr {
+  margin: 6px 0;
+  border: none;
+  border-top: 1px dashed #90caf9;
+}
+.calc-preview .seg {
+  padding: 2px 0;
+  font-size: 12px;
+}
