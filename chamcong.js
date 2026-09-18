@@ -228,13 +228,24 @@ function renderHeader(daysInMonth, yyyy, mm) {
   // === Row 7: Số ngày + tên cột QRC ===
   html += '<tr class="thu-header">';
   for (let d = 1; d <= daysInMonth; d++) {
-    const date = new Date(yyyy, mm-1, d);
-    const thu = date.getDay(); // 0=CN, 1=T2, ..., 6=T7
-    let cls = '';
-    if (thu === 0) cls = 'cn';
-    else if (thu === 6) cls = 't7';
-    html += `<th class="${cls}" style="background:${thu===0?'#ef5350':thu===6?'#ff9800':'#64b5f6'}">${d}</th>`;
-  }
+  const date = new Date(yyyy, mm-1, d);
+  const thu = date.getDay();
+  const ngayStr = `${yyyy}-${String(mm).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+  // Kiểm tra ngày đặc biệt
+  let cls = '';
+  let bg = '#64b5f6';
+  const db = STATE.ngayDacBiet.find(x => x.ngay === ngayStr);
+  if (db) {
+    if (db.loai === 'Le') { cls = 'le'; bg = '#c62828'; }
+    else if (db.loai === 'T7Bu') { cls = 'bu'; bg = '#78909c'; }
+  } else if (thu === 0) { cls = 'cn'; bg = '#ef5350'; }
+  else if (thu === 6) { cls = 't7'; bg = '#ff9800'; }
+
+  html += `<th class="${cls}" style="background:${bg}">${d}</th>`;
+}
+
+  
   // 24 cột QRC
   const qrcNames = [
     'Tổng công', 'SXKD', 'Lễ phép', 'Chờ việc', 'Học tập', 'Công tác',
@@ -272,8 +283,20 @@ function renderBody(daysInMonth, yyyy, mm) {
       const isEditable = isApprover ? 'editable' : '';
       const kyClass = kyHieu ? `ky-${nhom}` : '';
 
-      html += `<td class="day-cell ${isEditable} ${kyClass}"
-                   data-uid="${u.userID}"
+// Xác định class ngày đặc biệt
+let ngayCls = '';
+const db = STATE.ngayDacBiet.find(x => x.ngay === ngayStr);
+if (db) {
+  ngayCls = db.loai === 'Le' ? 'ngay-le' : 'ngay-bu';
+} else {
+  const dateObj = new Date(ngayStr + 'T00:00:00');
+  if (dateObj.getDay() === 0) ngayCls = 'ngay-cn';
+  else if (dateObj.getDay() === 6) ngayCls = 'ngay-t7';
+}
+
+html += `<td class="day-cell ${isEditable} ${kyClass} ${ngayCls}"
+
+data-uid="${u.userID}"
                    data-ngay="${ngayStr}"
                    onclick="onCellClick(this)"
                    title="${getTooltip(cellData)}">${kyHieu}</td>`;
