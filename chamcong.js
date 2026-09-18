@@ -450,14 +450,125 @@ function updateCalcPreview() {
     return;
   }
 
-  const calc = tinhGio(tu, den);
+  // Dùng JS tính giờ (đồng bộ với Calculator.gs)
+  const cell = STATE.currentCell;
+  const ngayStr = cell ? cell.ngay : new Date().toISOString().slice(0,10);
+
+  const calc = tinhChamCongJS(tu, den, ngayStr);
+
   preview.innerHTML = `
-    <b>Kết quả tính:</b><br>
-    • Giờ HC: <b>${calc.hc}</b>h (hệ số 1.0)<br>
-    • Ngoài HC ngày: <b>${calc.ngoaiNgay}</b>h (hệ số 1.5)<br>
-    • Ban đêm: <b>${calc.dem}</b>h (hệ số 1.7)<br>
-    • <b>Tổng gốc: ${calc.tongGoc}h → Hệ số: ${calc.tongHeSo}h</b>
+    <b>Kết quả tính:</b> (${calc.loaiNgay})<br>
+    ${calc.chiTiet.map(s =>
+      `• ${s.tu} - ${s.den}: <b>${s.soGio}h</b> × ${s.heSo} = ${Math.round(s.soGio*s.heSo*10)/10}h`
+    ).join('<br>')}
+    <hr style="margin:6px 0; border:none; border-top:1px dashed #90caf9">
+    • <b>Tổng gốc: ${calc.gioGoc}h → Hệ số: ${calc.gioHeSo}h</b>
   `;
+}
+
+/**
+ * JS version của Calculator.gs
+ */
+function tinhChamCongJS(tuGio, denGio, ngayStr) {
+  const HE_SO = {
+    T2_T6: { hc: 1.0, trua: 1.2, ngoaiNgay: 1.5, dem: 1.7 },
+    T7:    { ngay: 2.0, dem: 2.5 },
+    CN:    { ngay: 2.0, dem: 2.5 },
+    LE:    { ngay: 3.0, dem: 3.5 },
+    BU:    { hc: 1.0, trua: 1.2, ngoaiNgay: 1.5, dem: 1.7 }
+  };
+
+  const loaiNgay = xacDinhLoaiNgayJS(ngayStr);
+  const t1 = toMinJS(tuGio);
+  let t2 = toMinJS(denGio);
+  if (t2 <= t1) t2 += 24 * 60;
+
+  const mocCat = [t1];
+  [360, 420, 690, 810, 1020, 1320, 1440, 1800, 2160].forEach(m => {
+    if (m > t1 && m < t2) mocCat.push(m);
+  });
+  mocCat.push(t2);
+  mocCat.sort((a, b) => a - b);
+
+  const chiTiet = [];
+  let gioGoc = 0, gioHeSo = 0;
+
+  for (let i = 0; i < mocCat.length - 1; i++) {
+    const a = mocCat[i];
+    const b = mocCat[i + 1];
+    const soGio = Math.round((b - a) / 6) / 10;
+    const phanLoai = phanLoaiJS(a, b, loaiNgay);
+    const heSo = layHeSoJS(phanLoai, loaiNgay);
+    chiTiet.push({
+      tu: minToHHMMJS(a), den: minToHHMMJS(b),
+      soGio, phanLoai, heSo
+    });
+    gioGoc += soGio;
+    gioHeSo += soGio * heSo;
+  }
+
+  return {
+    loaiNgay,
+    gioGoc: Math.round(gioGoc * 10) / 10,
+    gioHeSo: Math.round(gioHeSo * 10) / 10,
+    chiTiet
+  };
+}
+
+function xacDinhLoaiNgayJS(ngayStr) {
+  // Check Lễ
+  for (const item of STATE.ngayDacBiet) {
+    if (item.ngay === ngayStr && item.loai === 'Le') return 'LE';
+    if (item.ngay === ngayStr && item.loai === 'T7Bu') return 'BU';
+  }
+  const d = new Date(ngayStr + 'T00:00:00');
+  const thu = d.getDay();
+  if (thu === 0) return 'CN';
+  if (thu === 6) return 'T7';
+  return 'THUONG';
+}
+
+function phanLoaiJS(a, b, loaiNgay) {
+  const mid = (a + b) / 2;
+  const midNgay = mid % 1440;
+
+  if (['T7','CN','LE'].includes(loaiNgay)) {
+    const isDem = midNgay >= 1320 || midNgay < 360;
+    return isDem ? 'DEM_TOAN' : 'NGAY_TOAN';
+  }
+  if (midNgay >= 1320 || midNgay < 360) return 'DEM';
+  if ((midNgay >= 420 && midNgay < 690) ||
+      (midNgay >= 810 && midNgay < 1020)) return 'HC';
+  if (midNgay >= 690 && midNgay < 810) return 'TRUA';
+  return 'NGOAI_NGAY';
+}
+
+function layHeSoJS(pl, loaiNgay) {
+  const HE_SO = {
+    T2_T6: { hc: 1.0, trua: 1.2, ngoaiNgay: 1.5, dem: 1.7 },
+    T7:    { ngay: 2.0, dem: 2.5 },
+    CN:    { ngay: 2.0, dem: 2.5 },
+    LE:    { ngay: 3.0, dem: 3.5 },
+    BU:    { hc: 1.0, trua: 1.2, ngoaiNgay: 1.5, dem: 1.7 }
+  };
+  if (loaiNgay === 'LE') return pl === 'DEM_TOAN' ? 3.5 : 3.0;
+  if (['T7','CN'].includes(loaiNgay)) return pl === 'DEM_TOAN' ? 2.5 : 2.0;
+  const b = loaiNgay === 'BU' ? HE_SO.BU : HE_SO.T2_T6;
+  if (pl === 'HC') return b.hc;
+  if (pl === 'TRUA') return b.trua;
+  if (pl === 'NGOAI_NGAY') return b.ngoaiNgay;
+  if (pl === 'DEM') return b.dem;
+  return 1.0;
+}
+
+function toMinJS(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + m;
+}
+function minToHHMMJS(m) {
+  const mm = m % 1440;
+  return String(Math.floor(mm/60)).padStart(2,'0') + ':' +
+         String(mm%60).padStart(2,'0');
 }
 
 function getTenKyHieu(ma) {
@@ -523,18 +634,21 @@ function confirmCell() {
   if (!STATE.chamCong[userID][ngay]) STATE.chamCong[userID][ngay] = {};
 
   const needTime = ['SCL', 'ĐTXD', 'SXKD', 'SCTX', 'ct', 'CT1', 'CT2'].includes(ky);
-  const calc = needTime ? tinhGio(tu, den) : { tongGoc: 0, tongHeSo: 0 };
+const calc = needTime
+  ? tinhChamCongJS(tu, den, ngay)
+  : { gioGoc: 0, gioHeSo: 0 };
+
 
   STATE.chamCong[userID][ngay] = {
-    kyHieu: ky,
-    gioBatDau: needTime ? tu : '',
-    gioKetThuc: needTime ? den : '',
-    congTrinh: ct,
-    soGio: calc.tongGoc,
-    gioGoc: calc.tongGoc,
-    gioHeSo: calc.tongHeSo,
-    moTa
-  };
+  kyHieu: ky,
+  gioBatDau: needTime ? tu : '',
+  gioKetThuc: needTime ? den : '',
+  congTrinh: ct,
+  soGio: calc.gioGoc,
+  gioGoc: calc.gioGoc,
+  gioHeSo: calc.gioHeSo,
+  moTa
+};
 
   // Cập nhật DOM
   cellEl.textContent = ky;
