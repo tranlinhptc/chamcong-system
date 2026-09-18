@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bảng chấm công</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="chamcong.css">
+</head>
+<body class="page-chamcong">
+
+<div class="topbar">
+  <div class="topbar-left">
+    <span class="logo">🕒</span>
+    <span class="title">Bảng chấm công</span>
+  </div>
+  <div class="topbar-right">
+    <span id="userInfo" class="user-info">...</span>
+    <button class="btn btn-sm" onclick="goHome()">🏠 Trang chủ</button>
+    <button class="btn btn-sm btn-danger" onclick="doLogout()">Đăng xuất</button>
+  </div>
+</div>
+
+<div class="toolbar">
+  <label>Tháng:</label>
+  <input type="month" id="monthPicker" onchange="loadMonth()">
+
+  <button class="btn btn-primary" id="btnSave" onclick="saveAll()" disabled>
+    💾 Lưu thay đổi
+  </button>
+  <button class="btn btn-success" onclick="exportExcel()">
+    📊 Xuất Excel
+  </button>
+  <button class="btn" onclick="showLegend()">
+    📖 Chú thích
+  </button>
+
+  <span id="statusMsg" class="status-msg"></span>
+</div>
+
+<div class="info-bar" id="infoBar">
+  <span id="roleBadge" class="badge"></span>
+  <span id="hintText"></span>
+</div>
+
+<div class="table-wrap">
+  <table id="mainTable">
+    <thead id="tableHead"></thead>
+    <tbody id="tableBody">
+      <tr><td colspan="40" class="loading">⏳ Đang tải dữ liệu...</td></tr>
+    </tbody>
+    <tfoot id="tableFoot"></tfoot>
+  </table>
+</div>
+
+<!-- ============ POPUP CHẤM CÔNG ============ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <h3 id="modalTitle">Chấm công</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Ký hiệu:</label>
+        <select id="fKyHieu" onchange="onKyHieuChange()"></select>
+      </div>
+
+      <div class="field-row" id="fieldTimeRow">
+        <div class="field">
+          <label>Từ giờ:</label>
+          <input type="time" id="fTuGio" value="08:00">
+        </div>
+        <div class="field">
+          <label>Đến giờ:</label>
+          <input type="time" id="fDenGio" value="17:00">
+        </div>
+      </div>
+
+      <div class="field" id="fieldCongTrinhRow">
+        <label>Công trình / Dự án:</label>
+        <input type="text" id="fCongTrinh" placeholder="VD: SCL1, ĐTXD2...">
+      </div>
+
+      <div class="field">
+        <label>Ghi chú:</label>
+        <textarea id="fMoTa" rows="2" placeholder="Ghi chú (không bắt buộc)"></textarea>
+      </div>
+
+      <div id="calcPreview" class="calc-preview"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal()">Hủy</button>
+      <button class="btn btn-danger" onclick="deleteCell()" id="btnDelete" style="display:none">
+        🗑 Xóa
+      </button>
+      <button class="btn btn-primary" onclick="confirmCell()">✔ Lưu ô này</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ POPUP LEGEND ============ -->
+<div class="modal-overlay" id="legendOverlay" onclick="closeLegend(event)">
+  <div class="modal modal-wide" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <h3>📖 Chú thích ký hiệu chấm công</h3>
+      <button class="modal-close" onclick="closeLegend()">✕</button>
+    </div>
+    <div class="modal-body" id="legendBody"></div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" onclick="closeLegend()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<script src="api.js"></script>
+<script src="chamcong.js"></script>
+</body>
+</html>
