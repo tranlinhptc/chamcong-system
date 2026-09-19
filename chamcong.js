@@ -179,7 +179,6 @@ r1.items.forEach(it => {
     moTa:        it.moTa || '',
     ngay:        ngayKey
   };
-}); { ...it, ngay: ngayKey };
 });
 
     STATE.ngayDacBiet = r2.items || [];
