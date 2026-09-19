@@ -168,7 +168,18 @@ r1.items.forEach(it => {
   const uID = it.maBC.split('_')[1];
   const ngayKey = normalizeNgay(it.ngay);
   if (!STATE.chamCong[uID]) STATE.chamCong[uID] = {};
-  STATE.chamCong[uID][ngayKey] = { ...it, ngay: ngayKey };
+  STATE.chamCong[uID][ngayKey] = {
+    kyHieu:      it.loai || '',           // ✅ MAP: loai → kyHieu
+    gioBatDau:   it.tuGio || '',          // ✅ MAP: tuGio → gioBatDau
+    gioKetThuc:  it.denGio || '',         // ✅ MAP: denGio → gioKetThuc
+    congTrinh:   it.congTrinh || '',
+    soGio:       it.soGio || 0,
+    gioGoc:      it.gioGoc || 0,
+    gioHeSo:     it.gioHeSo || 0,
+    moTa:        it.moTa || '',
+    ngay:        ngayKey
+  };
+}); { ...it, ngay: ngayKey };
 });
 
     STATE.ngayDacBiet = r2.items || [];
