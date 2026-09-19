@@ -166,9 +166,9 @@ async function loadMonth() {
     // Build state
 r1.items.forEach(it => {
   const uID = it.maBC.split('_')[1];
-  const ngayKey = normalizeNgay(it.ngay);       // ✅ Chuẩn hóa
+  const ngayKey = normalizeNgay(it.ngay);
   if (!STATE.chamCong[uID]) STATE.chamCong[uID] = {};
-  STATE.chamCong[uID][ngayKey] = { ...it, ngay: ngayKey };  // ✅ Cập nhật lại
+  STATE.chamCong[uID][ngayKey] = { ...it, ngay: ngayKey };
 });
 
     STATE.ngayDacBiet = r2.items || [];
