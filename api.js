@@ -9,7 +9,8 @@ async function callAPI(action, payload = {}) {
   const res = await fetch(GAS_URL, {
     method: 'POST',
     body: body,
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    cache: 'no-store'
   });
   return await res.json();
 }
