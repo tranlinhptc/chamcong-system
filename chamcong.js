@@ -165,10 +165,11 @@ async function loadMonth() {
 
     // Build state
     r1.items.forEach(it => {
-      const uID = it.maBC.split('_')[1];
-      if (!STATE.chamCong[uID]) STATE.chamCong[uID] = {};
-      STATE.chamCong[uID][it.ngay] = it;
-    });
+  const uID = it.maBC.split('_')[1];
+  const ngayKey = normalizeNgay(it.ngay);   // ✅ Thêm dòng này
+  if (!STATE.chamCong[uID]) STATE.chamCong[uID] = {};
+  STATE.chamCong[uID][ngayKey] = it;
+});
 
     STATE.ngayDacBiet = r2.items || [];
 
