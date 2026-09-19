@@ -164,11 +164,11 @@ async function loadMonth() {
     }
 
     // Build state
-    r1.items.forEach(it => {
+r1.items.forEach(it => {
   const uID = it.maBC.split('_')[1];
-  const ngayKey = normalizeNgay(it.ngay);   // ✅ Thêm dòng này
+  const ngayKey = normalizeNgay(it.ngay);       // ✅ Chuẩn hóa
   if (!STATE.chamCong[uID]) STATE.chamCong[uID] = {};
-  STATE.chamCong[uID][ngayKey] = it;
+  STATE.chamCong[uID][ngayKey] = { ...it, ngay: ngayKey };  // ✅ Cập nhật lại
 });
 
     STATE.ngayDacBiet = r2.items || [];
@@ -848,18 +848,19 @@ async function doLogout() {
 }
 /**
  * Chuẩn hóa ngày về "YYYY-MM-DD"
- * Chấp nhận: Date object, ISO string, hoặc string đã chuẩn
  */
 function normalizeNgay(v) {
   if (!v) return '';
+  // Trường hợp Date object
   if (v instanceof Date) {
     return v.getFullYear() + '-' +
       String(v.getMonth()+1).padStart(2,'0') + '-' +
       String(v.getDate()).padStart(2,'0');
   }
   const s = String(v);
-  // ISO: "2026-09-15T00:00:00.000Z" → "2026-09-15"
+  // ISO string: "2026-09-15T00:00:00.000Z" → "2026-09-15"
   if (s.includes('T')) return s.slice(0, 10);
+  // Đã đúng format
   return s;
 }
 
