@@ -846,6 +846,22 @@ async function doLogout() {
   sessionStorage.clear();
   location.href = 'index.html';
 }
+/**
+ * Chuẩn hóa ngày về "YYYY-MM-DD"
+ * Chấp nhận: Date object, ISO string, hoặc string đã chuẩn
+ */
+function normalizeNgay(v) {
+  if (!v) return '';
+  if (v instanceof Date) {
+    return v.getFullYear() + '-' +
+      String(v.getMonth()+1).padStart(2,'0') + '-' +
+      String(v.getDate()).padStart(2,'0');
+  }
+  const s = String(v);
+  // ISO: "2026-09-15T00:00:00.000Z" → "2026-09-15"
+  if (s.includes('T')) return s.slice(0, 10);
+  return s;
+}
 
 // ============ BOOT ============
 init();
