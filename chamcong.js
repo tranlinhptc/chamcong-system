@@ -135,35 +135,50 @@ async function loadUsers() {
 }
 
 async function loadMonth() {
-  const thang = document.getElementById('monthPicker').value;
+  const picker = document.getElementById('monthPicker');
+  const thang = picker.value;
   if (!thang) return;
+
+  console.log('🔵 loadMonth:', thang);
+
+  // Clear state
   STATE.thang = thang;
+  STATE.chamCong = {};
+  STATE.ngayDacBiet = [];
   STATE.dirtyCells.clear();
   updateSaveButton();
 
+  // Hiện loading
   document.getElementById('tableBody').innerHTML =
-    '<tr><td colspan="40" class="loading">⏳ Đang tải...</td></tr>';
+    '<tr><td colspan="40" class="loading">⏳ Đang tải tháng ' + thang + '...</td></tr>';
 
-  // Load chấm công + ngày đặc biệt song song
-  const [r1, r2] = await Promise.all([
-    API.getChamCong(STATE.token, thang),
-    API.getNgayDacBiet(STATE.token, thang)
-  ]);
+  try {
+    const [r1, r2] = await Promise.all([
+      API.getChamCong(STATE.token, thang),
+      API.getNgayDacBiet(STATE.token, thang)
+    ]);
 
-  if (!r1.ok) { alert('Lỗi tải chấm công: ' + r1.msg); return; }
-  if (!r2.ok) { alert('Lỗi tải ngày đặc biệt: ' + r2.msg); return; }
+    if (!r1.ok || !r2.ok) {
+      alert('Lỗi tải dữ liệu');
+      return;
+    }
 
-  // Chuyển items thành map
-  STATE.chamCong = {};
-  r1.items.forEach(it => {
-    const uID = it.maBC.split('_')[1]; // "BC_nv01_20260915"
-    if (!STATE.chamCong[uID]) STATE.chamCong[uID] = {};
-    STATE.chamCong[uID][it.ngay] = it;
-  });
+    // Build state
+    r1.items.forEach(it => {
+      const uID = it.maBC.split('_')[1];
+      if (!STATE.chamCong[uID]) STATE.chamCong[uID] = {};
+      STATE.chamCong[uID][it.ngay] = it;
+    });
 
-  STATE.ngayDacBiet = r2.items;
+    STATE.ngayDacBiet = r2.items || [];
 
-  renderTable();
+    console.log('✅ Loaded:', thang, '-', r1.items.length, 'rows');
+    renderTable();
+    setStatus('✅ Đã tải tháng ' + thang, 'ok');
+  } catch(e) {
+    console.error('❌', e);
+    alert('Lỗi: ' + e.message);
+  }
 }
 
 // ============ RENDER TABLE ============
