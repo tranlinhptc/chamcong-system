@@ -471,3 +471,64 @@ table#mainTable tbody td.day-cell.ngay-cn {
   padding: 2px 0;
   font-size: 12px;
 }
+/* =====================================================
+   BƯỚC 2.3b - TÔ MÀU NGÀY LỄ / T7 / CN
+   ===================================================== */
+
+/* === Header ngày (row 7) === */
+table#mainTable thead tr.thu-header th.le {
+  background: #c62828 !important;
+  color: white;
+  font-weight: 700;
+}
+table#mainTable thead tr.thu-header th.bu {
+  background: #78909c !important;
+  color: white;
+  font-weight: 700;
+}
+table#mainTable thead tr.thu-header th.today {
+  outline: 3px solid #ffeb3b;
+  outline-offset: -3px;
+  font-weight: 800;
+}
+
+/* === Ô ngày trong bảng === */
+table#mainTable tbody td.day-cell.ngay-le {
+  background: #ffebee !important;
+}
+table#mainTable tbody td.day-cell.ngay-t7 {
+  background: #fff8e1 !important;
+}
+table#mainTable tbody td.day-cell.ngay-cn {
+  background: #fce4ec !important;
+}
+table#mainTable tbody td.day-cell.ngay-bu {
+  background: #eceff1 !important;
+}
+
+/* Ô hôm nay có viền vàng */
+table#mainTable tbody td.day-cell.today {
+  outline: 2px solid #ffc107;
+  outline-offset: -2px;
+  background: #fffde7 !important;
+}
+
+/* Khi có ký hiệu, vẫn giữ màu ký hiệu trên nền ngày đặc biệt */
+table#mainTable tbody td.day-cell.ngay-le.ky-plus {
+  background: #c8e6c9 !important;
+}
+table#mainTable tbody td.day-cell.ngay-cn.ky-plus {
+  background: #c8e6c9 !important;
+}
+table#mainTable tbody td.day-cell.ngay-t7.ky-plus {
+  background: #c8e6c9 !important;
+}
+
+/* Nút lưu và xuất Excel nổi bật hơn */
+#btnSave:not(:disabled) {
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(46,125,50,0.4); }
+  50%      { box-shadow: 0 0 0 8px rgba(46,125,50,0); }
+}
