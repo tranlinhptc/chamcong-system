@@ -15,27 +15,26 @@ const CFG_FE = {
 const KY_HIEU = [
   // --- Làm việc ---
   { ma: '+',      ten: 'Công SXKD giờ HC',         nhom: 'plus' },
-  { ma: 'C1',     ten: 'Ca 1 (00h-14h)',            nhom: 'ca' },
-  { ma: 'C2',     ten: 'Ca 2 (14h-22h)',            nhom: 'ca' },
-  { ma: 'C3',     ten: 'Ca 3 (22h-06h hôm sau)',    nhom: 'ca' },
 
   // --- Công tác ---
-  { ma: 'ct',     ten: 'Công tác',                  nhom: 'ct' },
-  { ma: 'CT1',    ten: 'Công tác đi về trong ngày', nhom: 'ct' },
-  { ma: 'CT2',    ten: 'Công tác ≥ 2 ngày',         nhom: 'ct' },
+  { ma: 'ct',     ten: 'Công tác (chung)',          nhom: 'ct' },
+  { ma: 'CT1',    ten: 'Công tác 1 ngày',           nhom: 'ct' },
+  { ma: 'CT2',    ten: 'Công tác ≥2 ngày',          nhom: 'ct' },
 
   // --- Công trình ---
-  { ma: 'SCL',    ten: 'Sửa chữa lớn (chọn mã)',    nhom: 'scl' },
-  { ma: 'ĐTXD',   ten: 'Đầu tư XD (chọn mã)',       nhom: 'dtxd' },
+  { ma: 'SCL',    ten: 'Sửa chữa lớn (nhập mã)',    nhom: 'scl' },
+  { ma: 'ĐTXD',   ten: 'Đầu tư XD (nhập mã)',       nhom: 'dtxd' },
   { ma: 'SXKD',   ten: 'Sản xuất kinh doanh',       nhom: 'plus' },
   { ma: 'SCTX',   ten: 'Sửa chữa thường xuyên',     nhom: 'plus' },
+  { ma: 'GS',     ten: 'Giám sát',                  nhom: 'plus' },
+  { ma: 'KN',     ten: 'Kiểm nhận thiết bị',        nhom: 'plus' },
 
   // --- Học tập ---
   { ma: 'H1',     ten: 'Học tập < 1 tháng',         nhom: 'hoc' },
   { ma: 'H2',     ten: 'Học tập > 1 tháng (VN)',    nhom: 'hoc' },
   { ma: 'H3',     ten: 'Học tập nước ngoài',        nhom: 'hoc' },
 
-  // --- Nghỉ ---
+  // --- Nghỉ có lương ---
   { ma: 'L',      ten: 'Nghỉ lễ, Tết',              nhom: 'le' },
   { ma: 'BL',     ten: 'Nghỉ bù lễ',                nhom: 'le' },
   { ma: 'NB',     ten: 'Nghỉ bù',                   nhom: 'nghi' },
@@ -43,6 +42,11 @@ const KY_HIEU = [
   { ma: 'Ô',      ten: 'Nghỉ ốm',                   nhom: 'nghi' },
   { ma: 'NM',     ten: 'Nghỉ mát',                  nhom: 'nghi' },
   { ma: 'R',      ten: 'Nghỉ việc riêng có lương',  nhom: 'nghi' },
+  { ma: 'T',      ten: 'Nghỉ tai nạn LĐ',           nhom: 'nghi' },
+  { ma: 'TSn',    ten: 'Nghỉ thai sản',             nhom: 'nghi' },
+  { ma: 'Cô',     ten: 'Nghỉ con ốm',               nhom: 'nghi' },
+
+  // --- Nghỉ không lương ---
   { ma: 'KL',     ten: 'Nghỉ không lương',          nhom: 'khac' },
   { ma: 'NKL',    ten: 'Nghỉ việc không lương',     nhom: 'khac' },
   { ma: 'Ko',     ten: 'Nghỉ không lý do',          nhom: 'khac' },
@@ -52,22 +56,31 @@ const KY_HIEU = [
   { ma: 'DD',     ten: 'Điều dưỡng PHCN',           nhom: 'khac' },
   { ma: 'AT1',    ten: 'ATĐ mức 15%',               nhom: 'khac' },
   { ma: 'AT2',    ten: 'ATĐ mức 20%',               nhom: 'khac' },
-  { ma: 'T',      ten: 'Nghỉ tai nạn LĐ',           nhom: 'nghi' },
-  { ma: 'TSn',    ten: 'Nghỉ thai sản',             nhom: 'nghi' },
-  { ma: 'Cô',     ten: 'Nghỉ con ốm',               nhom: 'nghi' },
   { ma: 'CBsx',   ten: 'Chuẩn bị sản xuất',         nhom: 'khac' }
 ];
 
+// Danh sách ký hiệu cần nhập giờ
+const KY_CAN_NHAP_GIO = ['SCL', 'ĐTXD', 'SXKD', 'SCTX', 'GS', 'KN', 'ct', 'CT1', 'CT2'];
+
+// Ký hiệu cần chọn công trình (có mã)
+const KY_CAN_CONG_TRINH = ['SCL', 'ĐTXD'];
+
+// Ký hiệu cần nhập tên công việc
+const KY_CAN_TEN_VIEC = ['SXKD', 'SCTX', 'GS', 'KN'];
+
+// Ký hiệu liên quan đến công tác (cần chọn trạm)
+const KY_CONG_TAC = ['ct', 'CT1', 'CT2'];
 // ============ STATE ============
 const STATE = {
   token: null,
   user: null,
   users: [],
-  chamCong: {},     // { "nv01": { "2026-09-15": {...} } }
+  chamCong: {},
   ngayDacBiet: [],
   thang: '',
-  currentCell: null, // { userID, ngay, cellEl }
-  dirtyCells: new Set() // "userID_ngay"
+  currentCell: null,
+  dirtyCells: new Set(),
+  dsCongTrinh: {}   // ✅ THÊM: { SCL: ['SCL1','SCL2'], ĐTXD: ['ĐTXD1'] }
 };
 
 // ============ KHỞI TẠO ============
@@ -106,6 +119,53 @@ async function init() {
 
   renderLegend();
   renderKyHieuDropdown();
+}
+// ============ QUẢN LÝ DANH SÁCH CÔNG TRÌNH ============
+function loadDsCongTrinh() {
+  try {
+    const saved = localStorage.getItem('dsCongTrinh');
+    STATE.dsCongTrinh = saved ? JSON.parse(saved) : {};
+  } catch(e) {
+    STATE.dsCongTrinh = {};
+  }
+}
+
+function saveDsCongTrinh() {
+  try {
+    localStorage.setItem('dsCongTrinh', JSON.stringify(STATE.dsCongTrinh));
+  } catch(e) {}
+}
+
+function addCongTrinhVaoList(loai, ma) {
+  // loai = 'SCL' hoặc 'ĐTXD'
+  if (!loai || !ma) return;
+  const key = loai; // 'SCL' hoặc 'ĐTXD'
+  if (!STATE.dsCongTrinh[key]) STATE.dsCongTrinh[key] = [];
+  const maUp = ma.toUpperCase().trim();
+  if (!STATE.dsCongTrinh[key].includes(maUp)) {
+    STATE.dsCongTrinh[key].push(maUp);
+    STATE.dsCongTrinh[key].sort();
+    saveDsCongTrinh();
+  }
+}
+
+function updateDsCongTrinhDatalist(loaiKyHieu) {
+  const datalist = document.getElementById('dsCongTrinh');
+  let list = [];
+
+  if (loaiKyHieu === 'SCL') {
+    list = STATE.dsCongTrinh.SCL || [];
+  } else if (loaiKyHieu === 'ĐTXD') {
+    list = STATE.dsCongTrinh.ĐTXD || [];
+  }
+
+  // Nếu chưa có gì trong list → gợi ý mã mặc định
+  if (list.length === 0) {
+    if (loaiKyHieu === 'SCL') list = ['SCL1','SCL2','SCL3','SCL4','SCL5'];
+    if (loaiKyHieu === 'ĐTXD') list = ['ĐTXD1','ĐTXD2','ĐTXD3'];
+  }
+
+  datalist.innerHTML = list.map(m => `<option value="${m}">`).join('');
 }
 
 function renderUserInfo() {
@@ -169,16 +229,18 @@ r1.items.forEach(it => {
   const ngayKey = normalizeNgay(it.ngay);
   if (!STATE.chamCong[uID]) STATE.chamCong[uID] = {};
   STATE.chamCong[uID][ngayKey] = {
-    kyHieu:      it.loai || '',           // ✅ MAP: loai → kyHieu
-    gioBatDau:   it.tuGio || '',          // ✅ MAP: tuGio → gioBatDau
-    gioKetThuc:  it.denGio || '',         // ✅ MAP: denGio → gioKetThuc
-    congTrinh:   it.congTrinh || '',
-    soGio:       it.soGio || 0,
-    gioGoc:      it.gioGoc || 0,
-    gioHeSo:     it.gioHeSo || 0,
-    moTa:        it.moTa || '',
-    ngay:        ngayKey
-  };
+  kyHieu:     it.loai || it.kyHieu || '',
+  gioBatDau:  it.tuGio || it.gioBatDau || '',
+  gioKetThuc: it.denGio || it.gioKetThuc || '',
+  congTrinh:  it.congTrinh || '',
+  tenCongViec:it.tenCongViec || '',
+  tram:       it.tram || '',
+  ct1ct2:     it.ct1ct2 || '',
+  soGio:      Number(it.soGio) || 0,
+  gioGoc:     Number(it.gioGoc) || 0,
+  gioHeSo:    Number(it.gioHeSo) || 0,
+  moTa:       it.moTa || ''
+};
 });
 
     STATE.ngayDacBiet = r2.items || [];
@@ -310,13 +372,18 @@ function renderBody(daysInMonth, yyyy, mm) {
       }
       if (ngayStr === todayStr) ngayCls += ' today';
 
-      html += '<td class="day-cell ' + isEditable + ' ' + kyClass + ' ' + ngayCls + '"' +
-              ' data-uid="' + u.userID + '"' +
-              ' data-ngay="' + ngayStr + '"' +
-              ' onclick="onCellClick(this)"' +
-              ' title="' + getTooltip(cellData).replace(/"/g, '&quot;') + '">' +
-              (kyHieu || '') + '</td>';
-    }
+      // Hiện ký hiệu + badge CT1/CT2
+let cellContent = kyHieu || '';
+if (cellData?.ct1ct2) {
+  cellContent = `<span>${kyHieu}</span><span class="ct-badge">${cellData.ct1ct2}</span>`;
+}
+
+html += '<td class="day-cell ' + isEditable + ' ' + kyClass + ' ' + ngayCls + '"' +
+        ' data-uid="' + u.userID + '"' +
+        ' data-ngay="' + ngayStr + '"' +
+        ' onclick="onCellClick(this)"' +
+        ' title="' + getTooltip(cellData).replace(/"/g, '&quot;') + '">' +
+        cellContent + '</td>';
 
     // === 24 cột QRC ===
     const qrc = calcQRC(u.userID, daysInMonth, yyyy, mm);
@@ -439,9 +506,7 @@ function calcQRC(userID, daysInMonth, yyyy, mm) {
 
 // ============ POPUP CHẤM CÔNG ============
 function onCellClick(td) {
-  if (STATE.user.vaiTro !== 'approver') {
-    return; // user thường chỉ xem
-  }
+  if (STATE.user.vaiTro !== 'approver') return;
 
   const uid = td.dataset.uid;
   const ngay = td.dataset.ngay;
@@ -453,26 +518,79 @@ function onCellClick(td) {
   document.getElementById('modalTitle').textContent =
     `Chấm công: ${user.hoTen} — ${formatDate(ngay)}`;
 
+  // Set giá trị
   document.getElementById('fKyHieu').value = cellData ? cellData.kyHieu : '+';
   document.getElementById('fTuGio').value = cellData?.gioBatDau || '08:00';
   document.getElementById('fDenGio').value = cellData?.gioKetThuc || '17:00';
+  document.getElementById('fTram').value = cellData?.tram || '';
   document.getElementById('fCongTrinh').value = cellData?.congTrinh || '';
+  document.getElementById('fTenCongViec').value = cellData?.tenCongViec || '';
   document.getElementById('fMoTa').value = cellData?.moTa || '';
 
   document.getElementById('btnDelete').style.display = cellData ? 'inline-block' : 'none';
 
   onKyHieuChange();
+  if (cellData?.tram) onTramChange();
+
   document.getElementById('modalOverlay').classList.add('show');
 }
 
+
 function onKyHieuChange() {
   const ky = document.getElementById('fKyHieu').value;
-  const nhom = getNhom(ky);
-  const needTime = ['SCL', 'ĐTXD', 'SXKD', 'SCTX', 'ct', 'CT1', 'CT2'].includes(ky);
-  const needCT = ['SCL', 'ĐTXD', 'SXKD', 'SCTX'].includes(ky);
+  const needTime = KY_CAN_NHAP_GIO.includes(ky);
+  const needCT = KY_CAN_CONG_TRINH.includes(ky);
+  const needTen = KY_CAN_TEN_VIEC.includes(ky);
+  const needTram = KY_CONG_TAC.includes(ky);
 
   document.getElementById('fieldTimeRow').style.display = needTime ? 'grid' : 'none';
   document.getElementById('fieldCongTrinhRow').style.display = needCT ? 'block' : 'none';
+  document.getElementById('fieldTenCongViecRow').style.display = needTen ? 'block' : 'none';
+  document.getElementById('fieldTramRow').style.display = needTram ? 'block' : 'none';
+
+  // Reset công trình nếu đổi loại
+  if (needCT) {
+    updateDsCongTrinhDatalist(ky);
+  }
+
+  // Reset trạm nếu đổi khỏi công tác
+  if (!needTram) {
+    document.getElementById('fTram').value = '';
+    document.getElementById('ct12Hint').textContent = '';
+  }
+
+  updateCalcPreview();
+}
+
+function onTramChange() {
+  const tram = Number(document.getElementById('fTram').value);
+  const hint = document.getElementById('ct12Hint');
+  const ky = document.getElementById('fKyHieu').value;
+
+  if (!tram) {
+    hint.textContent = '';
+    hint.className = 'hint';
+    return;
+  }
+
+  if (tram >= 1 && tram <= 18) {
+    hint.textContent = '✅ Trạm ' + tram + ' → sẽ tính CT1/CT2 (phụ cấp)';
+    hint.className = 'hint ct-ok';
+
+    // Nếu đang là 'ct' → gợi ý chuyển thành CT1/CT2
+    if (ky === 'ct') {
+      // Tự động chuyển dropdown sang CT1
+      document.getElementById('fKyHieu').value = 'CT1';
+    }
+  } else {
+    hint.textContent = '⚠️ Trạm ' + tram + ' → KHÔNG tính CT1/CT2';
+    hint.className = 'hint ct-no';
+
+    // Nếu đang là CT1/CT2 → chuyển về 'ct'
+    if (ky === 'CT1' || ky === 'CT2') {
+      document.getElementById('fKyHieu').value = 'ct';
+    }
+  }
 
   updateCalcPreview();
 }
@@ -481,20 +599,38 @@ function updateCalcPreview() {
   const ky = document.getElementById('fKyHieu').value;
   const tu = document.getElementById('fTuGio').value;
   const den = document.getElementById('fDenGio').value;
+  const tram = document.getElementById('fTram').value;
   const preview = document.getElementById('calcPreview');
 
-  const needTime = ['SCL', 'ĐTXD', 'SXKD', 'SCTX', 'ct', 'CT1', 'CT2'].includes(ky);
+  const needTime = KY_CAN_NHAP_GIO.includes(ky);
 
   if (!needTime) {
-    preview.innerHTML = `<b>Ký hiệu:</b> ${ky} — ${getTenKyHieu(ky)}`;
+    let html = `<b>Ký hiệu:</b> ${ky} — ${getTenKyHieu(ky)}`;
+    if (KY_CONG_TAC.includes(ky) && tram) {
+      const tramNum = Number(tram);
+      if (tramNum >= 1 && tramNum <= 18) {
+        html += `<br><span style="color:#2e7d32">✅ Trạm ${tram} → tính CT1/CT2</span>`;
+      } else {
+        html += `<br><span style="color:#c62828">⚠️ Trạm ${tram} → không tính CT1/CT2</span>`;
+      }
+    }
+    preview.innerHTML = html;
     return;
   }
 
-  // Dùng JS tính giờ (đồng bộ với Calculator.gs)
   const cell = STATE.currentCell;
   const ngayStr = cell ? cell.ngay : new Date().toISOString().slice(0,10);
-
   const calc = tinhChamCongJS(tu, den, ngayStr);
+
+  let extraInfo = '';
+  if (KY_CONG_TAC.includes(ky) && tram) {
+    const tramNum = Number(tram);
+    if (tramNum >= 1 && tramNum <= 18) {
+      extraInfo = `<br><span style="color:#2e7d32">✅ Trạm ${tram} → sẽ đánh dấu CT1/CT2</span>`;
+    } else {
+      extraInfo = `<br><span style="color:#c62828">⚠️ Trạm ${tram} → không đánh CT1/CT2</span>`;
+    }
+  }
 
   preview.innerHTML = `
     <b>Kết quả tính:</b> (${calc.loaiNgay})<br>
@@ -503,6 +639,7 @@ function updateCalcPreview() {
     ).join('<br>')}
     <hr style="margin:6px 0; border:none; border-top:1px dashed #90caf9">
     • <b>Tổng gốc: ${calc.gioGoc}h → Hệ số: ${calc.gioHeSo}h</b>
+    ${extraInfo}
   `;
 }
 
@@ -659,6 +796,7 @@ function toMinutes(hhmm) {
 }
 
 // ============ LƯU Ô ============
+
 function confirmCell() {
   if (!STATE.currentCell) return;
 
@@ -666,40 +804,62 @@ function confirmCell() {
   const ky = document.getElementById('fKyHieu').value;
   const tu = document.getElementById('fTuGio').value;
   const den = document.getElementById('fDenGio').value;
+  const tram = document.getElementById('fTram').value;
   const ct = document.getElementById('fCongTrinh').value.trim();
+  const tenViec = document.getElementById('fTenCongViec').value.trim();
   const moTa = document.getElementById('fMoTa').value.trim();
 
-  // Cập nhật state tạm (chưa gửi server)
+  // Validate
+  if (KY_CONG_TAC.includes(ky) && !tram) {
+    alert('Vui lòng chọn Trạm công tác');
+    return;
+  }
+  if (KY_CAN_CONG_TRINH.includes(ky) && !ct) {
+    alert('Vui lòng nhập mã công trình (VD: SCL1)');
+    return;
+  }
+
+  // Lưu công trình vào list
+  if (KY_CAN_CONG_TRINH.includes(ky) && ct) {
+    addCongTrinhVaoList(ky, ct);
+  }
+
+  // Tính giờ
+  const needTime = KY_CAN_NHAP_GIO.includes(ky);
+  const calc = needTime
+    ? tinhChamCongJS(tu, den, ngay)
+    : { gioGoc: 0, gioHeSo: 0 };
+
+  // Xác định CT1/CT2
+  let ct1ct2 = '';
+  if (KY_CONG_TAC.includes(ky) && tram) {
+    const tramNum = Number(tram);
+    if (tramNum >= 1 && tramNum <= 18) {
+      ct1ct2 = (ky === 'CT2') ? 'CT2' : 'CT1';
+    }
+  }
+
+  // Cập nhật state
   if (!STATE.chamCong[userID]) STATE.chamCong[userID] = {};
-  if (!STATE.chamCong[userID][ngay]) STATE.chamCong[userID][ngay] = {};
-
-  const needTime = ['SCL', 'ĐTXD', 'SXKD', 'SCTX', 'ct', 'CT1', 'CT2'].includes(ky);
-const calc = needTime
-  ? tinhChamCongJS(tu, den, ngay)
-  : { gioGoc: 0, gioHeSo: 0 };
-
-
   STATE.chamCong[userID][ngay] = {
-  kyHieu: ky,
-  gioBatDau: needTime ? tu : '',
-  gioKetThuc: needTime ? den : '',
-  congTrinh: ct,
-  soGio: calc.gioGoc,
-  gioGoc: calc.gioGoc,
-  gioHeSo: calc.gioHeSo,
-  moTa
-};
+    kyHieu: ky,
+    gioBatDau: needTime ? tu : '',
+    gioKetThuc: needTime ? den : '',
+    tram,
+    congTrinh: ct,
+    tenCongViec: tenViec,
+    ct1ct2,
+    soGio: calc.gioGoc,
+    gioGoc: calc.gioGoc,
+    gioHeSo: calc.gioHeSo,
+    moTa
+  };
 
-  // Cập nhật DOM
-  cellEl.textContent = ky;
-  cellEl.className = 'day-cell editable ky-' + getNhom(ky);
-
-  // Đánh dấu dirty
   STATE.dirtyCells.add(userID + '_' + ngay);
   updateSaveButton();
 
   closeModal();
-  renderTable(); // re-render để cập nhật QRC
+  renderTable();
 }
 
 function deleteCell() {
