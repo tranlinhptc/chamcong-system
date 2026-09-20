@@ -55,17 +55,49 @@
 
 <!-- ============ POPUP CHẤM CÔNG ============ -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
-  <div class="modal" onclick="event.stopPropagation()">
+  <div class="modal modal-wide" onclick="event.stopPropagation()">
     <div class="modal-head">
       <h3 id="modalTitle">Chấm công</h3>
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div class="modal-body">
+
+      <!-- Ký hiệu -->
       <div class="field">
         <label>Ký hiệu:</label>
         <select id="fKyHieu" onchange="onKyHieuChange()"></select>
       </div>
 
+      <!-- Trạm (chỉ hiện với ct/CT1/CT2) -->
+      <div class="field" id="fieldTramRow" style="display:none">
+        <label>Trạm công tác:</label>
+        <select id="fTram" onchange="onTramChange()">
+          <option value="">-- Chọn trạm --</option>
+          <option value="1">Trạm 1</option>
+          <option value="2">Trạm 2</option>
+          <option value="3">Trạm 3</option>
+          <option value="4">Trạm 4</option>
+          <option value="5">Trạm 5</option>
+          <option value="6">Trạm 6</option>
+          <option value="7">Trạm 7</option>
+          <option value="8">Trạm 8</option>
+          <option value="9">Trạm 9</option>
+          <option value="10">Trạm 10</option>
+          <option value="11">Trạm 11</option>
+          <option value="12">Trạm 12</option>
+          <option value="13">Trạm 13</option>
+          <option value="14">Trạm 14</option>
+          <option value="15">Trạm 15</option>
+          <option value="16">Trạm 16</option>
+          <option value="17">Trạm 17</option>
+          <option value="18">Trạm 18</option>
+          <option value="19">Trạm 19 (không tính CT)</option>
+          <option value="20">Trạm 20 (không tính CT)</option>
+        </select>
+        <div id="ct12Hint" class="hint"></div>
+      </div>
+
+      <!-- Từ giờ - Đến giờ -->
       <div class="field-row" id="fieldTimeRow">
         <div class="field">
           <label>Từ giờ:</label>
@@ -77,16 +109,29 @@
         </div>
       </div>
 
-      <div class="field" id="fieldCongTrinhRow">
-        <label>Công trình / Dự án:</label>
-        <input type="text" id="fCongTrinh" placeholder="VD: SCL1, ĐTXD2...">
+      <!-- Công trình (SCL/ĐTXD) — dropdown gợi ý -->
+      <div class="field" id="fieldCongTrinhRow" style="display:none">
+        <label>Công trình (mã):</label>
+        <input type="text" id="fCongTrinh" list="dsCongTrinh"
+               placeholder="VD: SCL1, ĐTXD2...">
+        <datalist id="dsCongTrinh"></datalist>
+        <div class="hint">Gõ mã mới hoặc chọn từ gợi ý</div>
       </div>
 
+      <!-- Tên công việc (SXKD/SCTX) -->
+      <div class="field" id="fieldTenCongViecRow" style="display:none">
+        <label>Tên công việc:</label>
+        <input type="text" id="fTenCongViec"
+               placeholder="VD: Lập dự toán, Kéo rải cáp...">
+      </div>
+
+      <!-- Ghi chú -->
       <div class="field">
         <label>Ghi chú:</label>
         <textarea id="fMoTa" rows="2" placeholder="Ghi chú (không bắt buộc)"></textarea>
       </div>
 
+      <!-- Preview kết quả -->
       <div id="calcPreview" class="calc-preview"></div>
     </div>
     <div class="modal-foot">
