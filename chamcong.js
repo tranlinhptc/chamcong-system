@@ -436,7 +436,6 @@ function calcQRC(userID, daysInMonth, yyyy, mm) {
   qrc[11] = Math.round(sclGio * 10) / 10;
   return qrc;
 }
-}
 
 // ============ POPUP CHẤM CÔNG ============
 function onCellClick(td) {
