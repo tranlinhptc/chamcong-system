@@ -204,74 +204,59 @@ function renderTable() {
 }
 
 function renderHeader(daysInMonth, yyyy, mm) {
-  const isApprover = STATE.user.vaiTro === 'approver';
   const thead = document.getElementById('tableHead');
   let html = '';
 
-  // === Row 1-5: Tiêu đề bảng (gộp ô) ===
-  const colsTotal = 4 + daysInMonth + 24; // STT + Tên + Mã + Chức danh + Ngày + QRC
+  const colsTotal = 4 + daysInMonth + 24;
 
-  html += '<tr class="title-row">';
-  html += `<th colspan="${colsTotal}" class="left" style="background:#1565c0; color:white; padding:8px; font-size:14px">`;
-  html += 'CÔNG TY TRUYỀN TẢI ĐIỆN 3';
-  html += '</th>';
-  html += '</tr>';
+  // === Row 1-3: Tên công ty/đội/tổ ===
+  html += '<tr class="title-row"><th colspan="' + colsTotal + '" class="left" style="background:#1565c0; color:white; padding:8px; font-size:14px">CÔNG TY TRUYỀN TẢI ĐIỆN 3</th></tr>';
+  html += '<tr class="title-row"><th colspan="' + colsTotal + '" class="left" style="background:#1976d2; color:white;">ĐỘI SỬA CHỮA THÍ NGHIỆM ĐIỆN 3</th></tr>';
+  html += '<tr class="title-row"><th colspan="' + colsTotal + '" class="left" style="background:#1e88e5; color:white;">TỔ THÍ NGHIỆM ĐIỆN LÂM ĐỒNG</th></tr>';
 
-  html += '<tr class="title-row">';
-  html += `<th colspan="${colsTotal}" class="left" style="background:#1976d2; color:white;">`;
-  html += 'ĐỘI SỬA CHỮA THÍ NGHIỆM ĐIỆN 3';
-  html += '</th>';
-  html += '</tr>';
+  // === Row 4: Tên bảng ===
+  html += '<tr class="sub-title"><th colspan="' + colsTotal + '" style="font-size:16px; padding:10px;">BẢNG CHẤM CÔNG - Tháng ' + mm + ' năm ' + yyyy + '</th></tr>';
 
-  html += '<tr class="title-row">';
-  html += `<th colspan="${colsTotal}" class="left" style="background:#1e88e5; color:white;">`;
-  html += 'TỔ THÍ NGHIỆM ĐIỆN LÂM ĐỒNG';
-  html += '</th>';
-  html += '</tr>';
+  // === Row 5: Info ===
+  html += '<tr class="sub-title"><th colspan="' + colsTotal + '" style="padding:6px; font-size:12px; font-weight:normal">Số ngày trong tháng: ' + daysInMonth + ' | Nhân viên: ' + STATE.users.length + '</th></tr>';
 
-  html += '<tr class="sub-title">';
-  html += `<th colspan="${colsTotal}" style="font-size:16px; padding:10px;">`;
-  html += `BẢNG CHẤM CÔNG - Tháng ${mm} năm ${yyyy}`;
-  html += '</th>';
-  html += '</tr>';
-
-  html += '<tr class="sub-title">';
-  html += `<th colspan="${colsTotal}" style="padding:6px; font-size:12px; font-weight:normal">`;
-  html += `Số ngày trong tháng: ${daysInMonth} | Nhân viên: ${STATE.users.length}`;
-  html += '</th>';
-  html += '</tr>';
-
-  // === Row 6-7: Header chính (Ngày + Quy ra công) ===
+  // === Row 6: Header chính ===
   html += '<tr class="day-header">';
   html += '<th rowspan="2" class="stt-col" style="min-width:36px">TT</th>';
   html += '<th rowspan="2" class="name-col" style="min-width:160px; text-align:left; padding-left:8px">Họ và tên</th>';
   html += '<th rowspan="2" style="min-width:50px">Mã NV</th>';
   html += '<th rowspan="2" style="min-width:60px">Chức danh</th>';
-  html += `<th colspan="${daysInMonth}" style="background:#1a73e8">Ngày trong tháng</th>`;
+  html += '<th colspan="' + daysInMonth + '" style="background:#1a73e8">Ngày trong tháng</th>';
   html += '<th colspan="24" style="background:#f57c00">Quy ra công</th>';
   html += '</tr>';
 
-  // === Row 7: Số ngày + tên cột QRC ===
+  // === Row 7: Số ngày + Thứ ===
+  const today = new Date();
+  const todayStr = today.getFullYear() + '-' +
+    String(today.getMonth()+1).padStart(2,'0') + '-' +
+    String(today.getDate()).padStart(2,'0');
+
   html += '<tr class="thu-header">';
   for (let d = 1; d <= daysInMonth; d++) {
-  const date = new Date(yyyy, mm-1, d);
-  const thu = date.getDay();
-  const ngayStr = `${yyyy}-${String(mm).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const date = new Date(yyyy, mm-1, d);
+    const thu = date.getDay(); // 0=CN
+    const ngayStr = yyyy + '-' + String(mm).padStart(2,'0') + '-' + String(d).padStart(2,'0');
 
-  // Kiểm tra ngày đặc biệt
-  let cls = '';
-  let bg = '#64b5f6';
-  const db = STATE.ngayDacBiet.find(x => x.ngay === ngayStr);
-  if (db) {
-    if (db.loai === 'Le') { cls = 'le'; bg = '#c62828'; }
-    else if (db.loai === 'T7Bu') { cls = 'bu'; bg = '#78909c'; }
-  } else if (thu === 0) { cls = 'cn'; bg = '#ef5350'; }
-  else if (thu === 6) { cls = 't7'; bg = '#ff9800'; }
+    // Xác định loại ngày
+    const db = STATE.ngayDacBiet.find(x => x.ngay === ngayStr);
+    let bgColor = '#64b5f6';
+    let cls = '';
+    if (db) {
+      if (db.loai === 'Le') { bgColor = '#c62828'; cls = 'le'; }
+      else if (db.loai === 'T7Bu') { bgColor = '#78909c'; cls = 'bu'; }
+    } else if (thu === 0) { bgColor = '#ef5350'; cls = 'cn'; }
+    else if (thu === 6) { bgColor = '#ff9800'; cls = 't7'; }
 
-  html += `<th class="${cls}" style="background:${bg}">${d}</th>`;
-}
+    if (ngayStr === todayStr) cls += ' today';
 
-  
+    html += '<th class="' + cls + '" style="background:' + bgColor + '" title="' + ngayStr + '">' + d + '</th>';
+  }
+
   // 24 cột QRC
   const qrcNames = [
     'Tổng công', 'SXKD', 'Lễ phép', 'Chờ việc', 'Học tập', 'Công tác',
@@ -280,61 +265,65 @@ function renderHeader(daysInMonth, yyyy, mm) {
     'Con ốm', 'Riêng', 'NKL', 'Ko lý do', 'Nghỉ việc', 'Ghi chú'
   ];
   qrcNames.forEach((name, i) => {
-    html += `<th class="group-header" title="${name}">${i+1}</th>`;
+    html += '<th class="group-header" title="' + name + '">' + (i+1) + '</th>';
   });
   html += '</tr>';
 
   thead.innerHTML = html;
 }
-
 function renderBody(daysInMonth, yyyy, mm) {
   const tbody = document.getElementById('tableBody');
   const isApprover = STATE.user.vaiTro === 'approver';
   let html = '';
 
+  const today = new Date();
+  const todayStr = today.getFullYear() + '-' +
+    String(today.getMonth()+1).padStart(2,'0') + '-' +
+    String(today.getDate()).padStart(2,'0');
+
   STATE.users.forEach((u, idx) => {
     html += '<tr>';
-    html += `<td class="stt-cell">${idx + 1}</td>`;
-    html += `<td class="name-cell">${u.hoTen}</td>`;
-    html += `<td class="ma-cell">${u.userID}</td>`;
-    html += `<td class="chucdanh-cell">${u.username}</td>`;
+    html += '<td class="stt-cell">' + (idx + 1) + '</td>';
+    html += '<td class="name-cell">' + u.hoTen + '</td>';
+    html += '<td class="ma-cell">' + u.userID + '</td>';
+    html += '<td class="chucdanh-cell">' + u.username + '</td>';
 
     // === 31 ô ngày ===
     for (let d = 1; d <= daysInMonth; d++) {
-      const ngayStr = `${yyyy}-${String(mm).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const ngayStr = yyyy + '-' + String(mm).padStart(2,'0') + '-' + String(d).padStart(2,'0');
       const cellData = getCellData(u.userID, ngayStr);
       const kyHieu = cellData ? cellData.kyHieu : '';
       const nhom = getNhom(kyHieu);
 
       const isEditable = isApprover ? 'editable' : '';
-      const kyClass = kyHieu ? `ky-${nhom}` : '';
+      const kyClass = kyHieu ? 'ky-' + nhom : '';
 
-// Xác định class ngày đặc biệt
-let ngayCls = '';
-const db = STATE.ngayDacBiet.find(x => x.ngay === ngayStr);
-if (db) {
-  ngayCls = db.loai === 'Le' ? 'ngay-le' : 'ngay-bu';
-} else {
-  const dateObj = new Date(ngayStr + 'T00:00:00');
-  if (dateObj.getDay() === 0) ngayCls = 'ngay-cn';
-  else if (dateObj.getDay() === 6) ngayCls = 'ngay-t7';
-}
+      // Xác định class ngày đặc biệt
+      let ngayCls = '';
+      const db = STATE.ngayDacBiet.find(x => x.ngay === ngayStr);
+      if (db) {
+        ngayCls = db.loai === 'Le' ? 'ngay-le' : 'ngay-bu';
+      } else {
+        const dateObj = new Date(ngayStr + 'T00:00:00');
+        if (dateObj.getDay() === 0) ngayCls = 'ngay-cn';
+        else if (dateObj.getDay() === 6) ngayCls = 'ngay-t7';
+      }
+      if (ngayStr === todayStr) ngayCls += ' today';
 
-html += `<td class="day-cell ${isEditable} ${kyClass} ${ngayCls}"
-
-data-uid="${u.userID}"
-                   data-ngay="${ngayStr}"
-                   onclick="onCellClick(this)"
-                   title="${getTooltip(cellData)}">${kyHieu}</td>`;
+      html += '<td class="day-cell ' + isEditable + ' ' + kyClass + ' ' + ngayCls + '"' +
+              ' data-uid="' + u.userID + '"' +
+              ' data-ngay="' + ngayStr + '"' +
+              ' onclick="onCellClick(this)"' +
+              ' title="' + getTooltip(cellData).replace(/"/g, '&quot;') + '">' +
+              (kyHieu || '') + '</td>';
     }
 
     // === 24 cột QRC ===
     const qrc = calcQRC(u.userID, daysInMonth, yyyy, mm);
     for (let i = 0; i < 23; i++) {
-      html += `<td class="qrc-col">${qrc[i] || ''}</td>`;
+      html += '<td class="qrc-col">' + (qrc[i] || '') + '</td>';
     }
-    html += `<td class="qrc-col note"></td>`;
-
+    html += '<td class="qrc-col note"></td>';
     html += '</tr>';
   });
 
@@ -405,21 +394,19 @@ function getTooltip(cellData) {
 // ============ TÍNH QRC (đơn giản hóa — bước 2.3 sẽ hoàn thiện) ============
 function calcQRC(userID, daysInMonth, yyyy, mm) {
   const qrc = new Array(24).fill(0);
-  const user = STATE.users.find(u => u.userID === userID);
-  if (!user) return qrc;
-
-  let tongCong = 0;
-  let sclGio = 0, dtxdGio = 0;
+  let sclGio = 0;
 
   for (let d = 1; d <= daysInMonth; d++) {
-    const ngayStr = `${yyyy}-${String(mm).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const ngayStr = yyyy + '-' + String(mm).padStart(2,'0') + '-' + String(d).padStart(2,'0');
     const c = getCellData(userID, ngayStr);
     if (!c || !c.kyHieu) continue;
 
     const ky = c.kyHieu;
-    tongCong++;
 
-    // Mapping ký hiệu → cột QRC
+    // Cột 1: Tổng công (đếm ngày)
+    if (!isNghi(ky) && ky !== 'Ko' && ky !== 'N') qrc[0]++;
+
+    // Mapping
     if (ky === '+') qrc[1]++;
     else if (['L','P','BL'].includes(ky)) qrc[2]++;
     else if (ky === 'CBsx') qrc[3]++;
@@ -428,9 +415,14 @@ function calcQRC(userID, daysInMonth, yyyy, mm) {
     else if (ky === 'NB') qrc[6]++;
     else if (ky === 'Ô') qrc[7]++;
     else if (ky === 'KL') qrc[8]++;
-    else if (ky === 'DD') qrc[10]++;
-    else if (ky.startsWith('SCL')) sclGio += (c.soGio || 0);
+    else if (['DD'].includes(ky)) qrc[10]++;
+    else if (ky.startsWith('SCL')) {
+      // Cột 12 (index 11) = tổng giờ SCL
+      sclGio += (c.soGio || 0);
+    }
     else if (['AT1','AT2'].includes(ky)) qrc[12]++;
+    else if (ky === 'CĐ') qrc[13]++;
+    else if (ky === 'TĐ') qrc[14]++;
     else if (ky === 'T') qrc[15]++;
     else if (ky === 'NM') qrc[16]++;
     else if (ky === 'TSn') qrc[17]++;
@@ -441,9 +433,9 @@ function calcQRC(userID, daysInMonth, yyyy, mm) {
     else if (ky === 'N') qrc[22]++;
   }
 
-  qrc[0] = tongCong;
   qrc[11] = Math.round(sclGio * 10) / 10;
   return qrc;
+}
 }
 
 // ============ POPUP CHẤM CÔNG ============
@@ -836,8 +828,136 @@ function renderKyHieuDropdown() {
 
 // ============ XUẤT EXCEL (cơ bản) ============
 function exportExcel() {
-  // Xuất CSV đơn giản (bước 2.3 sẽ dùng SheetJS)
-  alert('Chức năng xuất Excel sẽ hoàn thiện ở bước 2.3.\nHiện tại dữ liệu đã lưu trên Sheet.');
+  if (typeof XLSX === 'undefined') {
+    alert('Chưa tải được thư viện Excel. Vui lòng F5 trang và thử lại.');
+    return;
+  }
+
+  const thang = STATE.thang; // "2026-09"
+  const [yyyy, mm] = thang.split('-').map(Number);
+  const daysInMonth = new Date(yyyy, mm, 0).getDate();
+
+  // ===== SHEET 1: ChamCong =====
+  const ws1 = [];
+  // Header rows
+  ws1.push(['CÔNG TY TRUYỀN TẢI ĐIỆN 3']);
+  ws1.push(['ĐỘI SỬA CHỮA THÍ NGHIỆM ĐIỆN 3']);
+  ws1.push(['TỔ THÍ NGHIỆM ĐIỆN LÂM ĐỒNG']);
+  ws1.push(['BẢNG CHẤM CÔNG - Tháng ' + mm + ' năm ' + yyyy]);
+  ws1.push([]); // dòng trống
+
+  // Header row 6: TT | Họ và tên | Mã NV | Chức danh | 1..31 | 1..24 QRC
+  const header1 = ['TT', 'Họ và tên', 'Mã NV', 'Chức danh'];
+  for (let d = 1; d <= daysInMonth; d++) header1.push(d);
+  for (let i = 1; i <= 24; i++) header1.push('QRC' + i);
+  ws1.push(header1);
+
+  // Header row 7: thứ
+  const header2 = ['', '', '', ''];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(yyyy, mm-1, d);
+    const thu = date.getDay();
+    const thuVN = ['CN','T2','T3','T4','T5','T6','T7'][thu];
+    header2.push(thuVN);
+  }
+  for (let i = 0; i < 24; i++) header2.push('');
+  ws1.push(header2);
+
+  // Data rows
+  STATE.users.forEach((u, idx) => {
+    const row = [idx + 1, u.hoTen, u.userID, u.username];
+    for (let d = 1; d <= daysInMonth; d++) {
+      const ngayStr = yyyy + '-' + String(mm).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+      const c = getCellData(u.userID, ngayStr);
+      row.push(c ? c.kyHieu : '');
+    }
+    const qrc = calcQRC(u.userID, daysInMonth, yyyy, mm);
+    for (let i = 0; i < 24; i++) row.push(qrc[i] || '');
+    ws1.push(row);
+  });
+
+  // Footer: tổng cộng
+  const footer = ['', 'TỔNG CỘNG', '', ''];
+  for (let d = 1; d <= daysInMonth; d++) {
+    let count = 0;
+    STATE.users.forEach(u => {
+      const ngayStr = yyyy + '-' + String(mm).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+      const c = getCellData(u.userID, ngayStr);
+      if (c && c.kyHieu && !isNghi(c.kyHieu)) count++;
+    });
+    footer.push(count || '');
+  }
+  const totalQRC = new Array(24).fill(0);
+  STATE.users.forEach(u => {
+    const qrc = calcQRC(u.userID, daysInMonth, yyyy, mm);
+    for (let i = 0; i < 24; i++) {
+      if (typeof qrc[i] === 'number') totalQRC[i] += qrc[i];
+    }
+  });
+  for (let i = 0; i < 24; i++) footer.push(totalQRC[i] || '');
+  ws1.push(footer);
+
+  // ===== SHEET 2: TongHop =====
+  const ws2 = [];
+  ws2.push(['TỔNG HỢP CHẤM CÔNG - Tháng ' + mm + '/' + yyyy]);
+  ws2.push([]);
+  ws2.push(['TT', 'Họ và tên', 'Mã NV', 'Chức danh', 'Tổng công', 'SXKD', 'Lễ phép',
+            'Chờ việc', 'Học tập', 'Công tác', 'Nghỉ bù', 'Nghỉ ốm', 'KL',
+            'ĐD PHCN', 'SCL', 'AT', 'CĐ', 'TĐ', 'TNLĐ', 'Nghỉ mát',
+            'Thai sản', 'Con ốm', 'Riêng', 'NKL', 'Ko lý do', 'Nghỉ việc']);
+
+  STATE.users.forEach((u, idx) => {
+    const qrc = calcQRC(u.userID, daysInMonth, yyyy, mm);
+    ws2.push([
+      idx + 1,
+      u.hoTen,
+      u.userID,
+      u.username,
+      qrc[0] || 0,   // Tổng công
+      qrc[1] || 0,   // SXKD
+      qrc[2] || 0,   // Lễ phép
+      qrc[3] || 0,
+      qrc[4] || 0,
+      qrc[5] || 0,
+      qrc[6] || 0,
+      qrc[7] || 0,
+      qrc[8] || 0,
+      qrc[10] || 0,
+      qrc[11] || 0,  // SCL
+      qrc[12] || 0,
+      qrc[13] || 0,
+      qrc[14] || 0,
+      qrc[15] || 0,
+      qrc[16] || 0,
+      qrc[17] || 0,
+      qrc[18] || 0,
+      qrc[19] || 0,
+      qrc[20] || 0,
+      qrc[21] || 0,
+      qrc[22] || 0
+    ]);
+  });
+
+  // ===== Tạo workbook =====
+  const wb = XLSX.utils.book_new();
+  const sh1 = XLSX.utils.aoa_to_sheet(ws1);
+  const sh2 = XLSX.utils.aoa_to_sheet(ws2);
+
+  // Set column widths
+  sh1['!cols'] = [
+    { wch: 5 }, { wch: 20 }, { wch: 8 }, { wch: 10 },
+    ...Array(daysInMonth).fill({ wch: 5 }),
+    ...Array(24).fill({ wch: 5 })
+  ];
+
+  XLSX.utils.book_append_sheet(wb, sh1, 'ChamCong');
+  XLSX.utils.book_append_sheet(wb, sh2, 'TongHop');
+
+  // ===== Xuất file =====
+  const fileName = 'BangChamCong_Thang' + mm + '_' + yyyy + '.xlsx';
+  XLSX.writeFile(wb, fileName);
+
+  setStatus('✅ Đã xuất file: ' + fileName, 'ok');
 }
 
 // ============ UTILS ============
