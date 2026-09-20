@@ -903,19 +903,22 @@ async function saveAll() {
       if (r.ok) ok++; else fail++;
     } else {
       const r = await API.saveChamCong(STATE.token, {
-        targetUserID: userID,
-        ngay,
-        loai: c.kyHieu,
-        gioVao: c.gioBatDau || '',
-        gioRa: c.gioKetThuc || '',
-        congTrinh: c.congTrinh || '',
-        soGio: c.soGio || 0,
-        moTa: c.moTa || ''
-      });
+  targetUserID: userID,
+  ngay,
+  loai: c.kyHieu,
+  gioVao: c.gioBatDau || '',
+  gioRa: c.gioKetThuc || '',
+  congTrinh: c.congTrinh || '',
+  soGio: c.soGio || 0,
+  moTa: c.moTa || '',
+  tram: c.tram || '',
+  tenCongViec: c.tenCongViec || '',
+  ct1ct2: c.ct1ct2 || ''
+});
+      
       if (r.ok) ok++; else fail++;
     }
   }
-
   STATE.dirtyCells.clear();
   updateSaveButton();
   btn.textContent = '💾 Lưu thay đổi';
