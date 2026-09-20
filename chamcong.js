@@ -825,7 +825,7 @@ function renderKyHieuDropdown() {
   ).join('');
 }
 
-// ============ XUẤT EXCEL (cơ bản) ============
+// ============ XUẤT EXCEL ============
 function exportExcel() {
   if (typeof XLSX === 'undefined') {
     alert('Chưa tải được thư viện Excel. Vui lòng F5 trang và thử lại.');
@@ -836,22 +836,55 @@ function exportExcel() {
   const [yyyy, mm] = thang.split('-').map(Number);
   const daysInMonth = new Date(yyyy, mm, 0).getDate();
 
+  // ===== SẮP XẾP USER THEO UserID =====
+  const sortedUsers = [...STATE.users].sort((a, b) =>
+    a.userID.localeCompare(b.userID)
+  );
+
+  // ===== TÍNH TRƯỚC QRC CHO TẤT CẢ USER =====
+  const qrcData = {};
+  const qrcTotals = new Array(24).fill(0);
+  sortedUsers.forEach(u => {
+    const qrc = calcQRC(u.userID, daysInMonth, yyyy, mm);
+    qrcData[u.userID] = qrc;
+    for (let i = 0; i < 24; i++) {
+      if (typeof qrc[i] === 'number') qrcTotals[i] += qrc[i];
+    }
+  });
+
+  // ===== XÁC ĐỊNH CỘT QRC NÀO CẦN GIỮ =====
+  // Bỏ cột nếu tổng tất cả user trong cả tháng = 0
+  // Luôn giữ cột 0 (Tổng công) và cột cuối (Ghi chú)
+  const qrcNames = [
+    'Tổng công', 'SXKD', 'Lễ phép', 'Chờ việc', 'Học tập', 'Công tác',
+    'Nghỉ bù', 'Nghỉ ốm', 'KL', 'Nghỉ bù 2', 'ĐD PHCN', 'SCL',
+    'AT', 'CĐ', 'TĐ', 'TNLĐ', 'Nghỉ mát', 'Thai sản',
+    'Con ốm', 'Riêng', 'NKL', 'Ko lý do', 'Nghỉ việc', 'Ghi chú'
+  ];
+
+  const qrcColsToKeep = [];
+  for (let i = 0; i < 24; i++) {
+    if (i === 0 || i === 23) { qrcColsToKeep.push(i); continue; } // Luôn giữ
+    if (qrcTotals[i] > 0) qrcColsToKeep.push(i);
+  }
+
   // ===== SHEET 1: ChamCong =====
   const ws1 = [];
-  // Header rows
+
+  // Row 1-4: Tiêu đề
   ws1.push(['CÔNG TY TRUYỀN TẢI ĐIỆN 3']);
   ws1.push(['ĐỘI SỬA CHỮA THÍ NGHIỆM ĐIỆN 3']);
   ws1.push(['TỔ THÍ NGHIỆM ĐIỆN LÂM ĐỒNG']);
   ws1.push(['BẢNG CHẤM CÔNG - Tháng ' + mm + ' năm ' + yyyy]);
   ws1.push([]); // dòng trống
 
-  // Header row 6: TT | Họ và tên | Mã NV | Chức danh | 1..31 | 1..24 QRC
+  // Row 6: Header chính
   const header1 = ['TT', 'Họ và tên', 'Mã NV', 'Chức danh'];
   for (let d = 1; d <= daysInMonth; d++) header1.push(d);
-  for (let i = 1; i <= 24; i++) header1.push('QRC' + i);
+  qrcColsToKeep.forEach(i => header1.push(qrcNames[i]));
   ws1.push(header1);
 
-  // Header row 7: thứ
+  // Row 7: Thứ
   const header2 = ['', '', '', ''];
   for (let d = 1; d <= daysInMonth; d++) {
     const date = new Date(yyyy, mm-1, d);
@@ -859,100 +892,87 @@ function exportExcel() {
     const thuVN = ['CN','T2','T3','T4','T5','T6','T7'][thu];
     header2.push(thuVN);
   }
-  for (let i = 0; i < 24; i++) header2.push('');
+  qrcColsToKeep.forEach(() => header2.push(''));
   ws1.push(header2);
 
   // Data rows
-  STATE.users.forEach((u, idx) => {
+  sortedUsers.forEach((u, idx) => {
     const row = [idx + 1, u.hoTen, u.userID, u.username];
+
+    // 31 ô ngày — ô rỗng ghi '' (KHÔNG ghi 0)
     for (let d = 1; d <= daysInMonth; d++) {
       const ngayStr = yyyy + '-' + String(mm).padStart(2,'0') + '-' + String(d).padStart(2,'0');
       const c = getCellData(u.userID, ngayStr);
-      row.push(c ? c.kyHieu : '');
+      row.push(c && c.kyHieu ? c.kyHieu : '');
     }
-    const qrc = calcQRC(u.userID, daysInMonth, yyyy, mm);
-    for (let i = 0; i < 24; i++) row.push(qrc[i] || '');
+
+    // QRC — chỉ push cột được giữ, ô = 0 thì để ''
+    const qrc = qrcData[u.userID];
+    qrcColsToKeep.forEach(i => {
+      const val = qrc[i];
+      row.push(val && val > 0 ? val : '');
+    });
+
     ws1.push(row);
   });
 
-  // Footer: tổng cộng
+  // Footer: TỔNG CỘNG
   const footer = ['', 'TỔNG CỘNG', '', ''];
   for (let d = 1; d <= daysInMonth; d++) {
     let count = 0;
-    STATE.users.forEach(u => {
+    sortedUsers.forEach(u => {
       const ngayStr = yyyy + '-' + String(mm).padStart(2,'0') + '-' + String(d).padStart(2,'0');
       const c = getCellData(u.userID, ngayStr);
       if (c && c.kyHieu && !isNghi(c.kyHieu)) count++;
     });
-    footer.push(count || '');
+    footer.push(count > 0 ? count : '');
   }
-  const totalQRC = new Array(24).fill(0);
-  STATE.users.forEach(u => {
-    const qrc = calcQRC(u.userID, daysInMonth, yyyy, mm);
-    for (let i = 0; i < 24; i++) {
-      if (typeof qrc[i] === 'number') totalQRC[i] += qrc[i];
-    }
+  qrcColsToKeep.forEach(i => {
+    const val = qrcTotals[i];
+    footer.push(val && val > 0 ? val : '');
   });
-  for (let i = 0; i < 24; i++) footer.push(totalQRC[i] || '');
   ws1.push(footer);
 
   // ===== SHEET 2: TongHop =====
   const ws2 = [];
   ws2.push(['TỔNG HỢP CHẤM CÔNG - Tháng ' + mm + '/' + yyyy]);
   ws2.push([]);
-  ws2.push(['TT', 'Họ và tên', 'Mã NV', 'Chức danh', 'Tổng công', 'SXKD', 'Lễ phép',
-            'Chờ việc', 'Học tập', 'Công tác', 'Nghỉ bù', 'Nghỉ ốm', 'KL',
-            'ĐD PHCN', 'SCL', 'AT', 'CĐ', 'TĐ', 'TNLĐ', 'Nghỉ mát',
-            'Thai sản', 'Con ốm', 'Riêng', 'NKL', 'Ko lý do', 'Nghỉ việc']);
 
-  STATE.users.forEach((u, idx) => {
-    const qrc = calcQRC(u.userID, daysInMonth, yyyy, mm);
-    ws2.push([
-      idx + 1,
-      u.hoTen,
-      u.userID,
-      u.username,
-      qrc[0] || 0,   // Tổng công
-      qrc[1] || 0,   // SXKD
-      qrc[2] || 0,   // Lễ phép
-      qrc[3] || 0,
-      qrc[4] || 0,
-      qrc[5] || 0,
-      qrc[6] || 0,
-      qrc[7] || 0,
-      qrc[8] || 0,
-      qrc[10] || 0,
-      qrc[11] || 0,  // SCL
-      qrc[12] || 0,
-      qrc[13] || 0,
-      qrc[14] || 0,
-      qrc[15] || 0,
-      qrc[16] || 0,
-      qrc[17] || 0,
-      qrc[18] || 0,
-      qrc[19] || 0,
-      qrc[20] || 0,
-      qrc[21] || 0,
-      qrc[22] || 0
-    ]);
+  // Header — chỉ cột được giữ
+  const headerTH = ['TT', 'Họ và tên', 'Mã NV', 'Chức danh'];
+  qrcColsToKeep.forEach(i => {
+    if (i !== 23) headerTH.push(qrcNames[i]); // bỏ cột "Ghi chú" cuối
+  });
+  ws2.push(headerTH);
+
+  sortedUsers.forEach((u, idx) => {
+    const qrc = qrcData[u.userID];
+    const row = [idx + 1, u.hoTen, u.userID, u.username];
+    qrcColsToKeep.forEach(i => {
+      if (i !== 23) {
+        const val = qrc[i];
+        row.push(val && val > 0 ? val : '');
+      }
+    });
+    ws2.push(row);
   });
 
-  // ===== Tạo workbook =====
+  // ===== TẠO WORKBOOK =====
   const wb = XLSX.utils.book_new();
   const sh1 = XLSX.utils.aoa_to_sheet(ws1);
   const sh2 = XLSX.utils.aoa_to_sheet(ws2);
 
-  // Set column widths
+  // Column widths
   sh1['!cols'] = [
-    { wch: 5 }, { wch: 20 }, { wch: 8 }, { wch: 10 },
+    { wch: 5 }, { wch: 22 }, { wch: 8 }, { wch: 12 },
     ...Array(daysInMonth).fill({ wch: 5 }),
-    ...Array(24).fill({ wch: 5 })
+    ...Array(qrcColsToKeep.length).fill({ wch: 8 })
   ];
 
   XLSX.utils.book_append_sheet(wb, sh1, 'ChamCong');
   XLSX.utils.book_append_sheet(wb, sh2, 'TongHop');
 
-  // ===== Xuất file =====
+  // Xuất file
   const fileName = 'BangChamCong_Thang' + mm + '_' + yyyy + '.xlsx';
   XLSX.writeFile(wb, fileName);
 
