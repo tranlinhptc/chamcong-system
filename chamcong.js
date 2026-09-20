@@ -118,6 +118,7 @@ async function init() {
   await loadMonth();
 
   renderLegend();
+  loadDsCongTrinh();
   renderKyHieuDropdown();
 }
 // ============ QUẢN LÝ DANH SÁCH CÔNG TRÌNH ============
