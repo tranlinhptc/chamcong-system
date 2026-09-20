@@ -385,7 +385,7 @@ html += '<td class="day-cell ' + isEditable + ' ' + kyClass + ' ' + ngayCls + '"
         ' onclick="onCellClick(this)"' +
         ' title="' + getTooltip(cellData).replace(/"/g, '&quot;') + '">' +
         cellContent + '</td>';
-
+    }
     // === 24 cột QRC ===
     const qrc = calcQRC(u.userID, daysInMonth, yyyy, mm);
     for (let i = 0; i < 23; i++) {
