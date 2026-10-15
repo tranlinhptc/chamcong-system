@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chấm công tác</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="congtac.css">
+</head>
+<body class="page-ct">
+
+<div class="topbar">
+  <div class="topbar-left">
+    <span class="logo">📝</span>
+    <span class="title">Chấm công tác</span>
+  </div>
+  <div class="topbar-right">
+    <span id="userInfo" class="user-info"></span>
+    <button class="btn btn-sm" onclick="location.href='home.html'">🏠</button>
+    <button class="btn btn-sm btn-danger" onclick="doLogout()">Thoát</button>
+  </div>
+</div>
+
+<div class="container-ct">
+
+  <!-- ===== HEADER CHUYẾN ===== -->
+  <div class="card-ct">
+    <h3>📋 Thông tin chuyến công tác</h3>
+
+    <div class="grid-2">
+      <div class="field">
+        <label>Ngày:</label>
+        <input type="date" id="fNgay">
+      </div>
+      <div class="field">
+        <label>Trạm (1-20):</label>
+        <input type="number" id="fTram" min="0" max="20" placeholder="VD: 5">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Địa điểm:</label>
+      <input type="text" id="fDiaDiem" placeholder="VD: Trạm 5 - Đà Lạt">
+    </div>
+
+    <div class="grid-2">
+      <div class="field">
+        <label>Loại công tác:</label>
+        <select id="fLoaiCT" onchange="onLoaiChange()">
+          <option value="">-- Chọn --</option>
+          <option value="SXKD">SXKD</option>
+          <option value="SCTX">SCTX</option>
+          <option value="SCL">SCL</option>
+          <option value="ĐTXD">ĐTXD</option>
+          <option value="GS">GS (Giám sát)</option>
+          <option value="KN">KN (Kiểm nhận)</option>
+        </select>
+      </div>
+      <div class="field" id="fieldHangMucWrap">
+        <label>Hạng mục:</label>
+        <select id="fHangMuc">
+          <option value="">-- Chọn hạng mục --</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Mô tả:</label>
+      <input type="text" id="fMoTa" placeholder="VD: Thí nghiệm MBA 500kV">
+    </div>
+  </div>
+
+  <!-- ===== CHI TIẾT ===== -->
+  <div class="card-ct">
+    <div class="card-head">
+      <h3>👥 Chi tiết công việc</h3>
+      <button class="btn btn-primary btn-sm" onclick="addRow()">+ Thêm dòng</button>
+    </div>
+
+    <div id="rowsWrap"></div>
+
+    <div class="preview-box" id="previewBox">
+      <b>📊 Tổng:</b> <span id="previewText">0h gốc → 0h hệ số</span>
+    </div>
+  </div>
+
+  <!-- ===== ACTIONS ===== -->
+  <div class="actions-ct">
+    <button class="btn" onclick="resetForm()">🔄 Làm mới</button>
+    <button class="btn btn-primary" id="btnSave" onclick="saveForm()">
+      💾 Lưu công tác
+    </button>
+  </div>
+
+</div>
+
+<div id="loading" class="loading-overlay" style="display:none">
+  <div class="loading-box">⏳ Đang xử lý...</div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="api.js"></script>
+<script src="congtac.js"></script>
+</body>
+</html>
