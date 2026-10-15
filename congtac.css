@@ -1,20 +1,15 @@
 body.page-ct {
   background: #f0f2f5;
-  display: block;
-  padding: 0;
-  margin: 0;
+  display: block; padding: 0; margin: 0;
   font-family: 'Segoe UI', Arial, sans-serif;
   min-height: 100vh;
 }
 
 /* Topbar */
 .topbar {
-  background: #1a73e8;
-  color: white;
+  background: #1a73e8; color: white;
   padding: 10px 15px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  display: flex; justify-content: space-between; align-items: center;
   position: sticky; top: 0; z-index: 100;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
@@ -29,10 +24,8 @@ body.page-ct {
 
 /* Card */
 .card-ct {
-  background: white;
-  border-radius: 10px;
-  padding: 14px;
-  margin-bottom: 12px;
+  background: white; border-radius: 10px;
+  padding: 14px; margin-bottom: 12px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 .card-ct h3 {
@@ -65,24 +58,88 @@ body.page-ct {
   box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
 }
 
-/* Rows */
-.ct-row {
+/* ===== BLOCK (Khung giờ) ===== */
+.time-block {
   background: #f8f9fa;
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 10px;
-  margin-bottom: 8px;
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1.2fr auto;
-  gap: 8px;
-  align-items: end;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+  position: relative;
 }
-.ct-row .field { margin: 0; }
-.ct-row .btn-del {
+.block-head {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 10px;
+}
+.block-num {
+  font-size: 13px; font-weight: 700; color: #1a73e8;
+  background: #e3f2fd; padding: 3px 10px; border-radius: 12px;
+}
+.block-del {
   background: #dc3545; color: white;
   border: none; border-radius: 6px;
-  padding: 9px 12px; cursor: pointer;
-  font-size: 16px;
+  padding: 4px 10px; cursor: pointer; font-size: 12px;
+}
+
+.block-time-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.3fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.block-time-row .field { margin: 0; }
+
+/* ===== CHIP NGƯỜI ===== */
+.chip-label {
+  font-size: 12px; font-weight: 600; color: #444;
+  margin-bottom: 6px; display: block;
+}
+.chip-tools {
+  display: flex; gap: 6px; margin-bottom: 8px;
+}
+.chip-tools button {
+  flex: 1;
+  background: #e0e0e0; color: #333;
+  border: none; border-radius: 6px;
+  padding: 6px 10px; font-size: 12px;
+  font-weight: 600; cursor: pointer;
+}
+.chip-tools button:active { background: #d0d0d0; }
+
+.chip-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.chip-nv {
+  padding: 8px 4px;
+  border-radius: 16px;
+  border: 2px solid #ccc;
+  background: #f4f4f4;
+  color: #666;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  user-select: none;
+  transition: all 0.15s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chip-nv.selected {
+  background: #1a73e8;
+  color: white;
+  border-color: #1a73e8;
+  font-weight: 700;
+}
+.chip-nv:active { transform: scale(0.95); }
+
+.chip-info {
+  font-size: 11px;
+  color: #666;
+  margin-top: 6px;
+  text-align: right;
 }
 
 /* Preview */
@@ -137,12 +194,9 @@ body.page-ct {
 .toast.err { background: #c62828; }
 
 /* Responsive */
-@media (max-width: 640px) {
-  .ct-row {
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-  }
-  .ct-row .field.full { grid-column: 1 / -1; }
-  .ct-row .btn-del { grid-column: 1 / -1; padding: 12px; }
+@media (max-width: 500px) {
+  .chip-grid { grid-template-columns: repeat(3, 1fr); }
   .grid-2 { grid-template-columns: 1fr; }
+  .block-time-row { grid-template-columns: 1fr 1fr; }
+  .block-time-row .field:last-child { grid-column: 1 / -1; }
 }
