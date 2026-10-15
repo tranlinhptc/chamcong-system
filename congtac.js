@@ -1,5 +1,5 @@
 // =====================================================
-// CONGTAC.JS - Form chấm công tác
+// CONGTAC.JS - Form chấm công tác (chip grid)
 // =====================================================
 
 const STATE = {
@@ -8,7 +8,7 @@ const STATE = {
   users: [],
   ngayDacBiet: [],
   dsCongTrinh: [],
-  rowCount: 0
+  blockCount: 0
 };
 
 // ============ KHỞI TẠO ============
@@ -19,11 +19,9 @@ async function init() {
   const r = await API.getUserInfo(STATE.token);
   if (!r.ok) { sessionStorage.clear(); location.href = 'index.html'; return; }
   STATE.user = r.user;
-  sessionStorage.setItem('user', JSON.stringify(r.user));
 
   document.getElementById('userInfo').textContent = '👤 ' + r.user.hoTen;
 
-  // Set ngày hôm nay
   const now = new Date();
   document.getElementById('fNgay').value = now.getFullYear() + '-' +
     String(now.getMonth()+1).padStart(2,'0') + '-' +
@@ -33,11 +31,9 @@ async function init() {
   await loadCongTrinh();
   await loadNgayDacBiet();
 
-  addRow(); // Dòng đầu tiên
-  addRow(); // Dòng thứ 2 cho tiện
+  addBlock();
 }
 
-// ============ LOAD DATA ============
 async function loadUsers() {
   const r = await API.getUsers(STATE.token);
   if (r.ok) STATE.users = r.users;
@@ -49,7 +45,6 @@ async function loadCongTrinh() {
 }
 
 async function loadNgayDacBiet() {
-  // Load 3 tháng gần đây
   const now = new Date();
   const thangs = [];
   for (let i = -1; i <= 1; i++) {
@@ -63,82 +58,126 @@ async function loadNgayDacBiet() {
   }
 }
 
-// ============ LOẠI CT → HẠNG MỤC ============
 function onLoaiChange() {
   const loai = document.getElementById('fLoaiCT').value;
   const sel = document.getElementById('fHangMuc');
-  const wrap = document.getElementById('fieldHangMucWrap');
-
-  // Chỉ SCL, ĐTXD, GS, KN mới có hạng mục
   if (!['SCL','ĐTXD','GS','KN'].includes(loai)) {
     sel.innerHTML = '<option value="">(không có)</option>';
-    wrap.style.opacity = '0.5';
     return;
   }
-  wrap.style.opacity = '1';
-
   const list = STATE.dsCongTrinh.filter(x => x.loai === loai);
   sel.innerHTML = '<option value="">-- Chọn --</option>' +
     list.map(x => '<option value="' + x.ma + '">' + x.ma + ' — ' + x.ten + '</option>').join('');
 }
 
-// ============ ROWS ============
-function addRow() {
-  STATE.rowCount++;
-  const id = STATE.rowCount;
-  const wrap = document.getElementById('rowsWrap');
+// ============ TÊN NGẮN ============
+function getShortName(full) {
+  const parts = full.trim().split(/\s+/);
+  let ten = parts[parts.length - 1];
+  // Xử lý trùng tên
+  if (ten === 'Đạt') {
+    if (full.includes('Tạ')) ten = 'Đạt(TQ)';
+    else if (full.includes('Nguyễn Hữu')) ten = 'Đạt(NH)';
+  }
+  return ten;
+}
+
+// ============ BLOCKS ============
+function addBlock() {
+  STATE.blockCount++;
+  const id = STATE.blockCount;
+  const wrap = document.getElementById('blocksWrap');
 
   const div = document.createElement('div');
-  div.className = 'ct-row';
-  div.id = 'row_' + id;
+  div.className = 'time-block';
+  div.id = 'block_' + id;
 
-  const userOptions = STATE.users.map(u =>
-    '<option value="' + u.userID + '">' + u.hoTen + '</option>'
-  ).join('');
+  // Sinh chip cho tất cả users
+  const chips = STATE.users.map(u => {
+    return '<div class="chip-nv" data-uid="' + u.userID + '" ' +
+           'onclick="toggleChip(this)">' + getShortName(u.hoTen) + '</div>';
+  }).join('');
 
   div.innerHTML = `
-    <div class="field full">
-      <label>Người:</label>
-      <select class="r-nguoi">${userOptions}</select>
+    <div class="block-head">
+      <span class="block-num">Khung giờ ${id}</span>
+      <button class="block-del" onclick="removeBlock(${id})">🗑 Xóa</button>
     </div>
-    <div class="field">
-      <label>Từ giờ:</label>
-      <input type="time" class="r-tu" value="08:00" onchange="updatePreview()">
+
+    <div class="block-time-row">
+      <div class="field">
+        <label>Từ giờ:</label>
+        <input type="time" class="b-tu" value="08:00" onchange="updatePreview()">
+      </div>
+      <div class="field">
+        <label>Đến giờ:</label>
+        <input type="time" class="b-den" value="17:00" onchange="updatePreview()">
+      </div>
+      <div class="field">
+        <label>Loại:</label>
+        <select class="b-loai" onchange="updatePreview()">
+          <option value="ThiCong">Thi công</option>
+          <option value="DiChuyenDi">Di chuyển đi</option>
+          <option value="DiChuyenVe">Di chuyển về</option>
+          <option value="Nghi">Nghỉ</option>
+        </select>
+      </div>
     </div>
-    <div class="field">
-      <label>Đến giờ:</label>
-      <input type="time" class="r-den" value="17:00" onchange="updatePreview()">
+
+    <label class="chip-label">👥 Chọn người tham gia:</label>
+    <div class="chip-tools">
+      <button onclick="selectAllChips(${id})">✅ Chọn tất cả</button>
+      <button onclick="clearChips(${id})">❌ Bỏ chọn</button>
     </div>
-    <div class="field">
-      <label>Loại:</label>
-      <select class="r-loai" onchange="updatePreview()">
-        <option value="ThiCong">Thi công</option>
-        <option value="DiChuyenDi">Di chuyển đi</option>
-        <option value="DiChuyenVe">Di chuyển về</option>
-        <option value="Nghi">Nghỉ</option>
-      </select>
-    </div>
-    <button class="btn-del" onclick="removeRow(${id})">🗑</button>
+    <div class="chip-grid">${chips}</div>
+    <div class="chip-info">Đã chọn: <b class="chip-count">0</b> người</div>
   `;
 
   wrap.appendChild(div);
   updatePreview();
 }
 
-function removeRow(id) {
-  const el = document.getElementById('row_' + id);
+function removeBlock(id) {
+  const el = document.getElementById('block_' + id);
   if (el) el.remove();
   updatePreview();
 }
 
-function collectRows() {
+function toggleChip(el) {
+  el.classList.toggle('selected');
+  const block = el.closest('.time-block');
+  const count = block.querySelectorAll('.chip-nv.selected').length;
+  block.querySelector('.chip-count').textContent = count;
+  updatePreview();
+}
+
+function selectAllChips(id) {
+  const block = document.getElementById('block_' + id);
+  block.querySelectorAll('.chip-nv').forEach(c => c.classList.add('selected'));
+  block.querySelector('.chip-count').textContent = STATE.users.length;
+  updatePreview();
+}
+
+function clearChips(id) {
+  const block = document.getElementById('block_' + id);
+  block.querySelectorAll('.chip-nv').forEach(c => c.classList.remove('selected'));
+  block.querySelector('.chip-count').textContent = '0';
+  updatePreview();
+}
+
+// ============ COLLECT DATA ============
+function collectChiTiet() {
   const rows = [];
-  document.querySelectorAll('#rowsWrap .ct-row').forEach(el => {
-    rows.push({
-      nguoi: el.querySelector('.r-nguoi').value,
-      tuGio: el.querySelector('.r-tu').value,
-      denGio: el.querySelector('.r-den').value,
-      loai: el.querySelector('.r-loai').value
+  document.querySelectorAll('#blocksWrap .time-block').forEach(block => {
+    const tuGio = block.querySelector('.b-tu').value;
+    const denGio = block.querySelector('.b-den').value;
+    const loai = block.querySelector('.b-loai').value;
+
+    block.querySelectorAll('.chip-nv.selected').forEach(chip => {
+      rows.push({
+        nguoi: chip.dataset.uid,
+        tuGio, denGio, loai
+      });
     });
   });
   return rows;
@@ -146,7 +185,7 @@ function collectRows() {
 
 // ============ PREVIEW ============
 function updatePreview() {
-  const rows = collectRows();
+  const rows = collectChiTiet();
   const ngayStr = document.getElementById('fNgay').value;
   let tongGoc = 0, tongHeSo = 0;
 
@@ -155,18 +194,21 @@ function updatePreview() {
     const calc = tinhChamCongJS(r.tuGio, r.denGio, ngayStr);
     if (r.loai === 'DiChuyenDi' || r.loai === 'DiChuyenVe') {
       tongGoc += calc.gioGoc;
-      tongHeSo += calc.gioGoc; // hệ số 1
+      tongHeSo += calc.gioGoc;
     } else {
       tongGoc += calc.gioGoc;
       tongHeSo += calc.gioHeSo;
     }
   });
 
+  const soNguoi = new Set(rows.filter(r => r.loai !== 'Nghi').map(r => r.nguoi)).size;
   document.getElementById('previewText').textContent =
-    Math.round(tongGoc*10)/10 + 'h gốc → ' + Math.round(tongHeSo*10)/10 + 'h hệ số';
+    rows.length + ' dòng (' + soNguoi + ' người) • ' +
+    Math.round(tongGoc*10)/10 + 'h gốc → ' +
+    Math.round(tongHeSo*10)/10 + 'h hệ số';
 }
 
-// ============ TÍNH GIỜ (copy từ Calculator.gs) ============
+// ============ TÍNH GIỜ (giống Calculator.gs) ============
 function tinhChamCongJS(tuGio, denGio, ngayStr) {
   if (!ngayStr) ngayStr = new Date().toISOString().slice(0,10);
   const loaiNgay = xacDinhLoaiNgayJS(ngayStr);
@@ -249,8 +291,11 @@ async function saveForm() {
   if (!ngay) { toast('Vui lòng chọn ngày', 'err'); return; }
   if (!loaiCT) { toast('Vui lòng chọn loại công tác', 'err'); return; }
 
-  const chiTiet = collectRows().filter(r => r.nguoi && r.tuGio && r.denGio);
-  if (chiTiet.length === 0) { toast('Chưa có dòng chi tiết', 'err'); return; }
+  const chiTiet = collectChiTiet();
+  if (chiTiet.length === 0) { toast('Chưa chọn người nào', 'err'); return; }
+
+  if (!confirm('Lưu ' + chiTiet.length + ' dòng cho ' +
+               new Set(chiTiet.map(x => x.nguoi)).size + ' người?')) return;
 
   showLoading(true);
   try {
@@ -278,9 +323,9 @@ function resetForm() {
   document.getElementById('fLoaiCT').value = '';
   document.getElementById('fHangMuc').innerHTML = '<option value="">-- Chọn --</option>';
   document.getElementById('fMoTa').value = '';
-  document.getElementById('rowsWrap').innerHTML = '';
-  STATE.rowCount = 0;
-  addRow(); addRow();
+  document.getElementById('blocksWrap').innerHTML = '';
+  STATE.blockCount = 0;
+  addBlock();
   updatePreview();
 }
 
@@ -303,5 +348,4 @@ async function doLogout() {
   location.href = 'index.html';
 }
 
-// ============ BOOT ============
 init();
