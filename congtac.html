@@ -23,14 +23,14 @@
 
 <div class="container-ct">
 
-  <!-- ===== HEADER CHUYẾN ===== -->
+  <!-- HEADER CHUYẾN -->
   <div class="card-ct">
     <h3>📋 Thông tin chuyến công tác</h3>
 
     <div class="grid-2">
       <div class="field">
         <label>Ngày:</label>
-        <input type="date" id="fNgay">
+        <input type="date" id="fNgay" onchange="updatePreview()">
       </div>
       <div class="field">
         <label>Trạm (1-20):</label>
@@ -56,7 +56,7 @@
           <option value="KN">KN (Kiểm nhận)</option>
         </select>
       </div>
-      <div class="field" id="fieldHangMucWrap">
+      <div class="field">
         <label>Hạng mục:</label>
         <select id="fHangMuc">
           <option value="">-- Chọn hạng mục --</option>
@@ -70,21 +70,21 @@
     </div>
   </div>
 
-  <!-- ===== CHI TIẾT ===== -->
+  <!-- CHI TIẾT -->
   <div class="card-ct">
     <div class="card-head">
-      <h3>👥 Chi tiết công việc</h3>
-      <button class="btn btn-primary btn-sm" onclick="addRow()">+ Thêm dòng</button>
+      <h3>🕒 Khung giờ & Người tham gia</h3>
+      <button class="btn btn-primary btn-sm" onclick="addBlock()">+ Thêm khung giờ</button>
     </div>
 
-    <div id="rowsWrap"></div>
+    <div id="blocksWrap"></div>
 
     <div class="preview-box" id="previewBox">
       <b>📊 Tổng:</b> <span id="previewText">0h gốc → 0h hệ số</span>
     </div>
   </div>
 
-  <!-- ===== ACTIONS ===== -->
+  <!-- ACTIONS -->
   <div class="actions-ct">
     <button class="btn" onclick="resetForm()">🔄 Làm mới</button>
     <button class="btn btn-primary" id="btnSave" onclick="saveForm()">
