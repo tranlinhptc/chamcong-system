@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Test API</title>
+<style>
+  body { font-family: Arial; padding: 20px; background: #f0f2f5; }
+  button { display: block; width: 100%; padding: 15px; margin: 8px 0;
+           font-size: 16px; border: none; border-radius: 8px;
+           background: #1a73e8; color: white; font-weight: bold; }
+  button:active { background: #0d5bcf; }
+  .result { background: white; padding: 12px; border-radius: 8px;
+            margin-top: 15px; font-size: 13px; white-space: pre-wrap;
+            word-break: break-all; max-height: 400px; overflow: auto;
+            font-family: monospace; }
+  .err { color: red; }
+  .ok { color: green; }
+  input { width: 100%; padding: 12px; margin: 5px 0;
+          border: 1px solid #ccc; border-radius: 6px;
+          font-size: 15px; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<h2>🧪 Test API Công Tác</h2>
+
+<label>Token (lấy từ sessionStorage sau khi login):</label>
+<input id="tk" placeholder="Dán token vào đây">
+
+<label>API URL:</label>
+<input id="api" value="https://script.google.com/macros/s/AKfycbyhnEPOy8x9rMJZ75z1ajlWMeaCZAz7lF3z4vWxPg5vXd0OznSBKvSEmZqcuU0lLBZO/exec">
+
+<button onclick="test1()">📋 TEST 1 — Lấy danh mục công trình</button>
+<button onclick="test2()">💾 TEST 2 — Lưu 1 công tác</button>
+<button onclick="test3()">📂 TEST 3 — Load công tác tháng 10/2026</button>
+<button onclick="test4()">💤 TEST 4 — Lưu nghỉ bù</button>
+
+<div id="res" class="result">Kết quả hiện ở đây...</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const show = (msg, cls) => {
+  $('res').className = 'result ' + (cls || '');
+  $('res').textContent = typeof msg === 'string' ? msg
+    : JSON.stringify(msg, null, 2);
+};
+
+async function call(action, payload) {
+  const body = JSON.stringify({ action, token: $('tk').value.trim(), ...payload });
+  const r = await fetch($('api').value.trim(), {
+    method: 'POST',
+    body: body,
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+  });
+  return await r.json();
+}
+
+async function test1() {
+  show('⏳ Đang gọi API...');
+  try {
+    const r = await call('getCongTrinh', {});
+    show(r, r.ok ? 'ok' : 'err');
+  } catch(e) { show('❌ Lỗi: ' + e.message, 'err'); }
+}
+
+async function test2() {
+  show('⏳ Đang lưu...');
+  try {
+    const r = await call('saveCongTac', {
+      ngay: '2026-10-15',
+      diaDiem: 'Trạm 5',
+      tram: 5,
+      loaiCT: 'SCL',
+      hangMuc: 'SCL1',
+      moTa: 'Test từ điện thoại',
+      chiTiet: [
+        { nguoi:'nv01', tuGio:'07:00', denGio:'11:00', loai:'ThiCong' },
+        { nguoi:'nv01', tuGio:'12:00', denGio:'16:00', loai:'ThiCong' },
+        { nguoi:'nv02', tuGio:'07:00', denGio:'11:00', loai:'ThiCong' }
+      ]
+    });
+    show(r, r.ok ? 'ok' : 'err');
+  } catch(e) { show('❌ Lỗi: ' + e.message, 'err'); }
+}
+
+async function test3() {
+  show('⏳ Đang load...');
+  try {
+    const r = await call('getCongTac', {
+      dsThang: ['2026-10'],
+      dsLoai: ['SCL']
+    });
+    show(r, r.ok ? 'ok' : 'err');
+  } catch(e) { show('❌ Lỗi: ' + e.message, 'err'); }
+}
+
+async function test4() {
+  show('⏳ Đang lưu nghỉ bù...');
+  try {
+    const r = await call('saveNghiBu', {
+      nguoi: 'nv01',
+      ngayNghi: '2026-10-20',
+      soGio: 8,
+      lyDo: 'Nghỉ bù công tác tháng 9'
+    });
+    show(r, r.ok ? 'ok' : 'err');
+  } catch(e) { show('❌ Lỗi: ' + e.message, 'err'); }
+}
+</script>
+</body>
+</html>
