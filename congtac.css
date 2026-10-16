@@ -1,3 +1,5 @@
+/* ============ CONGTAC.CSS - Form 5 tab ============ */
+
 body.page-ct {
   background: #f0f2f5;
   display: block; padding: 0; margin: 0;
@@ -15,12 +17,38 @@ body.page-ct {
 }
 .topbar-left { display: flex; align-items: center; gap: 8px; }
 .topbar-left .logo { font-size: 20px; }
-.topbar-left .title { font-size: 16px; font-weight: 600; }
+.topbar-left .title { font-size: 15px; font-weight: 600; }
 .topbar-right { display: flex; gap: 6px; align-items: center; }
 .user-info { font-size: 12px; opacity: 0.9; }
 
+/* Tabs */
+.tabs-ct {
+  display: flex; gap: 2px;
+  background: #e3f2fd; padding: 6px;
+  position: sticky; top: 52px; z-index: 99;
+  overflow-x: auto;
+}
+.tab-ct {
+  flex: 0 0 auto;
+  padding: 10px 14px;
+  background: white; color: #1a73e8;
+  border: 1px solid #90caf9;
+  border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.tab-ct.active {
+  background: #1a73e8; color: white;
+  border-color: #1a73e8;
+}
+
 /* Container */
 .container-ct { padding: 10px; max-width: 900px; margin: 0 auto; }
+
+/* Tab content */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
 
 /* Card */
 .card-ct {
@@ -29,7 +57,7 @@ body.page-ct {
   box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 .card-ct h3 {
-  font-size: 15px; color: #1a73e8;
+  font-size: 14px; color: #1a73e8;
   margin: 0 0 12px; padding-bottom: 8px;
   border-bottom: 1px solid #eee;
 }
@@ -40,6 +68,18 @@ body.page-ct {
 }
 .card-head h3 { margin: 0; padding: 0; border: none; }
 
+/* Toggle checkbox */
+.toggle {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; color: #2e7d32;
+  cursor: pointer; user-select: none;
+}
+.toggle input[type="checkbox"] {
+  width: 18px; height: 18px;
+  accent-color: #2e7d32;
+  cursor: pointer;
+}
+
 /* Fields */
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .field { margin-bottom: 10px; }
@@ -47,7 +87,7 @@ body.page-ct {
   font-size: 12px; font-weight: 600; color: #444;
   display: block; margin-bottom: 4px;
 }
-.field input, .field select {
+.field input, .field select, .field textarea {
   width: 100%; padding: 9px 11px;
   border: 1px solid #ccc; border-radius: 6px;
   font-size: 14px; font-family: inherit;
@@ -58,38 +98,55 @@ body.page-ct {
   box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
 }
 
-/* ===== BLOCK (Khung giờ) ===== */
-.time-block {
+/* Radio group */
+.radio-group {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  padding: 6px 0;
+}
+.radio-group label {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 14px; cursor: pointer;
+}
+.radio-group input[type="radio"] {
+  width: 18px; height: 18px; accent-color: #1a73e8;
+}
+
+/* Checkbox group */
+.checkbox-group {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  padding: 6px 0;
+}
+.checkbox-group label {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 14px; cursor: pointer;
+}
+.checkbox-group input[type="checkbox"] {
+  width: 18px; height: 18px; accent-color: #1a73e8;
+}
+
+/* ============ BLOCK CÔNG TÁC ============ */
+.ct-block {
   background: #f8f9fa;
   border: 1px solid #e0e0e0;
   border-radius: 10px;
   padding: 12px;
   margin-bottom: 12px;
-  position: relative;
 }
-.block-head {
+.ct-block-head {
   display: flex; justify-content: space-between;
   align-items: center; margin-bottom: 10px;
 }
-.block-num {
+.ct-block-num {
   font-size: 13px; font-weight: 700; color: #1a73e8;
   background: #e3f2fd; padding: 3px 10px; border-radius: 12px;
 }
-.block-del {
+.btn-del-ct {
   background: #dc3545; color: white;
   border: none; border-radius: 6px;
   padding: 4px 10px; cursor: pointer; font-size: 12px;
 }
 
-.block-time-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1.3fr;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-.block-time-row .field { margin: 0; }
-
-/* ===== CHIP NGƯỜI ===== */
+/* ============ CHIP NGƯỜI ============ */
 .chip-label {
   font-size: 12px; font-weight: 600; color: #444;
   margin-bottom: 6px; display: block;
@@ -150,8 +207,9 @@ body.page-ct {
   border-radius: 6px;
   font-size: 13px;
   color: #0d47a1;
-  margin-top: 10px;
+  margin: 10px 0;
 }
+.preview-box b { color: #e65100; }
 
 /* Actions */
 .actions-ct {
@@ -197,6 +255,4 @@ body.page-ct {
 @media (max-width: 500px) {
   .chip-grid { grid-template-columns: repeat(3, 1fr); }
   .grid-2 { grid-template-columns: 1fr; }
-  .block-time-row { grid-template-columns: 1fr 1fr; }
-  .block-time-row .field:last-child { grid-column: 1 / -1; }
 }
