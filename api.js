@@ -32,12 +32,32 @@ const API = {
   deleteChamCong: (t, maBC)  => callAPI('deleteChamCong', {token:t, maBC}),
 
   // ✅ CÔNG TÁC (MỚI)
-  getCongTrinh:      (t)       => callAPI('getCongTrinh', {token:t}),
-  saveCongTrinh:     (t, data) => callAPI('saveCongTrinh', {token:t, ...data}),
+  
   saveCongTac:       (t, data) => callAPI('saveCongTac', {token:t, ...data}),
   getCongTac:        (t, data) => callAPI('getCongTac', {token:t, ...data}),
   getCongTacChiTiet: (t, maCT) => callAPI('getCongTacChiTiet', {token:t, maCT}),
   deleteCongTac:     (t, maCT) => callAPI('deleteCongTac', {token:t, maCT}),
+    // Công trình
+  getCongTrinh:  (t)       => callAPI('getCongTrinh',  {token:t}),
+  saveCongTrinh: (t, data) => callAPI('saveCongTrinh', {token:t, ...data}),
+
+  // Công tác (JSON 1 bảng)
+  saveCongTac:       (t, data) => callAPI('saveCongTac',       {token:t, ...data}),
+  getCongTac:        (t, data) => callAPI('getCongTac',        {token:t, ...data}),
+  getCongTacChiTiet: (t, maCT) => callAPI('getCongTacChiTiet', {token:t, maCT}),
+  deleteCongTac:     (t, maCT) => callAPI('deleteCongTac',     {token:t, maCT}),
+
+  // Nghỉ
+  saveNghi: (t, data) => callAPI('saveNghi', {token:t, ...data}),
+  getNghi:  (t, data) => callAPI('getNghi',  {token:t, ...data}),
+
+  // Nghỉ bù
+  saveNghiBu: (t, data) => callAPI('saveNghiBu', {token:t, ...data}),
+  getNghiBu:  (t, data) => callAPI('getNghiBu',  {token:t, ...data}),
+
+  // Độc hại
+  saveDocHai: (t, data) => callAPI('saveDocHai', {token:t, ...data}),
+  getDocHai:  (t, data) => callAPI('getDocHai',  {token:t, ...data}),
 
   // ✅ NGHỈ BÙ (MỚI)
   saveNghiBu: (t, data) => callAPI('saveNghiBu', {token:t, ...data}),
