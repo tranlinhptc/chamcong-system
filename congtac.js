@@ -594,9 +594,9 @@ function renderTongHopTable() {
           cell.goc += tinh.gioGoc;
           cell.heSo += tinh.gioHeSo;
           // Đếm ngày/đêm — giờ đêm là 22:00-06:00
-          const demGio = demGio(nhom.tu, nhom.den);
-          cell.ngay += tinh.gioGoc - demGio;
-          cell.dem += demGio;
+const gioDem = demGio(nhom.tu, nhom.den);
+cell.ngay += tinh.gioGoc - gioDem;
+cell.dem += gioDem;
         }
         if (nhom.hangMuc && nhom.hangMuc.startsWith('SCL')) cell.scl = true;
         if (nhom.hangMuc && nhom.hangMuc.startsWith('ĐTXD')) cell.dtxd = true;
