@@ -1,459 +1,141 @@
-/************************************************************
- * HỆ THỐNG THỐNG KÊ GIỜ LÀM VIỆC
- * Tác giả: (bạn điền)
- ************************************************************/
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<style>
+  body { font-family: Arial, sans-serif; padding: 10px; font-size: 13px; }
+  h3 { margin: 8px 0 4px; color: #2c3e50; }
+  label { display:block; margin-top:6px; font-weight:600; }
+  input, select, textarea { width:100%; padding:4px; box-sizing:border-box; margin-top:2px; }
+  .row2 { display:flex; gap:6px; }
+  .row2 > div { flex:1; }
+  button { padding:8px 12px; margin-top:10px; width:100%;
+           background:#1a73e8; color:#fff; border:0; border-radius:4px; cursor:pointer; }
+  button.gray { background:#5f6368; }
+  .box { border:1px solid #ddd; border-radius:4px; padding:8px; margin-bottom:8px; }
+  #msg { color: green; margin-top:6px; }
+</style>
+</head>
+<body>
 
-const SS = SpreadsheetApp.getActiveSpreadsheet();
+<div class="box">
+  <h3>➕ Nhập công tác</h3>
+  <label>Ngày (ngày công tác)</label>
+  <input type="date" id="ngay">
+  <div class="row2">
+    <div>
+      <label>Mã NV</label>
+      <select id="manv"></select>
+    </div>
+    <div>
+      <label>Loại CT</label>
+      <select id="loaiCT">
+        <option>SANXUAT</option><option>SCL</option><option>DTXD</option>
+        <option>CT</option><option>H</option><option>P</option>
+        <option>NGHIBU</option><option>DIEUDUONG</option>
+        <option>THAISAN</option><option>OM</option><option>KHAC</option>
+      </select>
+    </div>
+  </div>
+  <div class="row2">
+    <div><label>Mã CT</label><input id="maCT" placeholder="SCL1, GOI2…"></div>
+    <div><label>Hạng mục</label><input id="hangMuc" placeholder="Thay cuộn cắt…"></div>
+  </div>
+  <label>Trạm</label>
+  <ấtselect id="tram"></select>
+  <label>CT1 / CT2</label>
+  <select id="ctType"><option value="">--</option><option>CT1</option><option>CT2</option></select>
 
-const SHEETS = {
-  CAUHINH:  'CauHinh',
-  NHANVIEN: 'NhanVien',
-  TRAM:     'Tram',
-  NGAYLE:   'NgayLe',
-  NHATKY:   'NhatKy',
-  TONGHOP:  'TongHop'
-};
+  <div class="row2">
+    <div><label>Bắt đầu</label><input type="time" id="gioBD" value="07:00"></div>
+    <div><label>Kết thúc</label><input type="time" id="gioKT" value="17:00"></div>
+  </div>
+  <div class="row2 Excel">
+    <div><label>DC đi từ</label><input type="time" id="dcDiTu"></div>
+    <div><label>DC đi đến</label><input type="time" id="dcDiDen"></div>
+  </div>
+  <div class="row2">
+    <div><label>DC về từ</label><input type="time" id="dcVeTu"></div>
+    <div><label>DC về đến</label><input type="time" id="dcVeDen"></div>
+  </div>
+  <label>Ghi chú</label>
+  <input id="ghiChu">
+  <button onclick="saveEntry()">Lưu công tác</button>
+  <div id="msg"></div>
+</div>
 
-const COEFF = {
-  HC: 1.0,           // Trong giờ hành chính
-  OT_DAY: 1.5,       // Ngoài giờ hành chính ban ngày
-  OT_NIGHT: 1.7,     // Ngoài giờ hành chính ban đêm
-  WEEKEND_DAY: 2.0,  // Cuối tuần ban ngày
-  WEEKEND_NIGHT: 2.5,// Cuối tuần ban đêm
-  HOLIDAY_DAY: 3.0,  // Lễ ban ngày
-  HOLIDAY_NIGHT: 3.5,// Lễ ban đêm
-  TRAVEL: 1.0        // Di chuyển
-};
+<div class="box">
+  <h3>📤 Xuất Excel</h3>
+  <div class="row2">
+    <div><label>Từ ngày</label><input type="date" id="expFrom"></div>
+    <div><label>Đến ngày</label><input type="date" id="expTo"></div>
+  </div>
+  <label>Loại công tác (để trống = tất cả)</label>
+  <input id="expTypes" placeholder="SCL,DTXD,SANXUAT">
+  <label>Mã NV (để trống = tất cả)</label>
+  <input id="expNVs" placeholder="NV01,NV02">
+  <button onclick="doExport()">Xuất Excel</button>
+  <button class="gray" onclick="rebuild()">Tính lại toàn bộ</button>
+</div>
 
-// Cột sheet NhatKy (1-indexed)
-const C = {
-  ID:1, NGAY:2, MANV:3, TENNV:4, LOAI_CT:5, MA_CT:6, HANG_MUC:7,
-  TRAM:8, CT_TYPE:9, GIO_BD:10, GIO_KT:11,
-  DC_DI_TU:12, DC_DI_DEN:13, DC_VE_TU:14, DC_VE_DEN:15,
-  HC:16, OT_NGAY:17, OT_DEM:18, CUOITUAN_NGAY:19, CUOITUAN_DEM:20,
-  LE_NGAY:21, LE_DEM:22, TONG_GIO:23, TONG_HS:24, DI_CHUYEN:25, GHI_CHU:26
-};
+<script>
+  google.script.run.withSuccessHandler(init).getLists();
 
-const HEADERS = [
-  'ID','Ngày','Mã NV','Tên NV','Loại CT','Mã CT','Hạng mục','Trạm','CT1/CT2',
-  'Bắt đầu','Kết thúc','DC đi từ','DC đi đến','DC về từ','DC về đến',
-  'HC (h)','OT ngày (h)','OT đêm (h)','Cuối tuần ngày (h)','Cuối tuần đêm (h)',
-  'Lễ ngày (h)','Lễ đêm (h)','Tổng giờ gốc','Tổng giờ hệ số','Di chuyển (h)','Ghi chú'
-];
+  function init(lists) {
+    const selNV = document.getElementById('manv');
+    selNV.innerHTML = '<option value="">--</option>' +
+      lists.nhanvien.map(n => `<option value="${n.ma}">${n.ma} - ${n.ten}</option>`).join('');
+    const selT = document.getElementById('tram');
+    selT.innerHTML = '<option value="">--</option>' +
+      lists.tram.map(t => `<option>${t}</option>`).join('');
 
-/************************************************************
- * KHỞI TẠO HỆ THỐNG
- ************************************************************/
-function setupAll() {
-  const stations = [
-    'TBA 500kV Di Linh','TBA 220kV Bảo Lộc','TBA 220kV Đức Trọng',
-    'TBA 220kV Phan Thiết','TBA 220kV Hàm Tân','TBA 220kV Vĩnh Hảo',
-    'TBA 500kV Vĩnh Tân','TBA 500kV Đắk Nông','TBA 500kV Thuận Nam',
-    'TBA 220kV Đắk Nông','TBA 220kV Tháp Chàm','TBA 220kV Phan Rí',
-    'Kho Đất Nông','Kho Lâm Đồng','Kho Di Linh'
-  ];
-
-  ensureSheet(SHEETS.CAUHINH, ['Tham số','Giá trị'], [
-    ['Hệ số HC', 1],['OT ngày',1.5],['OT đêm',1.7],
-    ['Cuối tuần ngày',2],['Cuối tuần đêm',2.5],
-    ['Lễ ngày',3],['Lễ đêm',3.5],['Di chuyển',1],
-    ['Ngưỡng OT/ngày (h)',4],['Ngưỡng OT/tháng (h)',40]
-  ]);
-
-  ensureSheet(SHEETS.NHANVIEN, ['Mã NV','Tên NV','Bộ phận'], []);
-  ensureSheet(SHEETS.TRAM, ['Tên trạm','Là Bảo Lộc?'],
-    stations.map(s => [s, s.indexOf('Bảo Lộc') >= 0 ? 'X' : '']));
-  ensureSheet(SHEETS.NGAYLE, ['Ngày','Tên lễ'], []);
-  ensureSheet(SHEETS.NHATKY, HEADERS, []);
-
-  const sh = SS.getSheetByName(SHEETS.NHATKY);
-  sh.setFrozenRows(1);
-  sh.getRange(1,1,1,HEADERS.length).setFontWeight('bold').setBackground('#e8eaf6');
-
-  // Data validation cho cột Loại CT
-  const loaiRule = SpreadsheetApp.newDataValidation().requireValueInList(
-    ['SANXUAT','SCL','DTXD','CT','H','P','NGHIBU','DIEUDUONG','THAISAN','OM','KHAC'], true
-  ).build();
-  sh.getRange(2, C.LOAI_CT, 1000, 1).setDataValidation(loaiRule);
-
-  // Validation CT1/CT2
-  const ctRule = SpreadsheetApp.newDataValidation().requireValueInList(['CT1','CT2',''], true).build();
-  sh.getRange(2, C.CT_TYPE, 1000, 1).setDataValidation(ctRule);
-
-  SpreadsheetApp.getUi().alert('Đã khởi tạo hệ thống thành công!');
-}
-
-function ensureSheet(name, headers, sample) {
-  let sh = SS.getSheetByName(name);
-  if (!sh) sh = SS.insertSheet(name);
-  if (sh.getLastRow() === 0) {
-    sh.getRange(1,1,1,headers.length).setValues([headers])
-      .setFontWeight('bold').setBackground('#e8eaf6');
-    if (sample && sample.length) {
-      sh.getRange(2,1,sample.length,headers.length).setValues(sample);
-    }
-  }
-  return sh;
-}
-
-/************************************************************
- * TRIGGER: onEdit – tự động tính khi nhập
- ************************************************************/
-function onEdit(e) {
-  if (!e || !e.range) return;
-  const sh = e.range.getSheet();
-  if (sh.getName() !== SHEETS.NHATKY) return;
-  const row = e.range.getRow();
-  if (row < 2) return;
-  const col = e.range.getColumn();
-  // Chỉ tính khi sửa các cột liên quan
-  const triggerCols = [C.NGAY,C.GIO_BD,C.GIO_KT,C.DC_DI_TU,C.DC_DI_DEN,C.DC_VE_TU,C.DC_VE_DEN];
-  if (triggerCols.indexOf(col) >= 0) {
-    computeRow(row);
-  }
-}
-
-/************************************************************
- * LÕI TÍNH TOÁN – BÓC TÁCH KHOẢNG THỜI GIAN
- ************************************************************/
-function computeRow(rowIndex) {
-  const sh = SS.getSheetByName(SHEETS.NHATKY);
-  const rng = sh.getRange(rowIndex, 1, 1, HEADERS.length);
-  const row = rng.getValues()[0];
-
-  const ngay = row[C.NGAY-1];
-  const gioBD = row[C.GIO_BD-1];
-  const gioKT = row[C.GIO_KT-1];
-  if (!ngay || !gioBD || !gioKT) return;
-
-  const workDay = toDate(ngay);
-  workDay.setHours(0,0,0,0);
-  const dow = workDay.getDay();
-  const isWeekend = (dow === 0 || dow === 6);
-  const isHoliday = isHolidayDate(workDay);
-
-  // Chuyển giờ sang phút tuyệt đối kể từ 0:00 của ngày công tác
-  // Ngày công tác kéo dài từ 6:00 hôm nay tới 6:00 hôm sau (tức [360, 1800] phút)
-  const startAbs = timeToAbs(gioBD, false);
-  let endAbs = timeToAbs(gioKT, false);
-  // Nếu giờ kết thúc < giờ bắt đầu => qua ngày hôm sau
-  if (endAbs <= startAbs) endAbs += 1440;
-
-  // Kẹp vào cửa sổ ngày công tác
-  const ws = Math.max(startAbs, 360);
-  const we = Math.min(endAbs, 1800);
-
-  const res = { HC:0, OT_DAY:0, OT_NIGHT:0, WEEKEND_DAY:0, WEEKEND_NIGHT:0, HOLIDAY_DAY:0, HOLIDAY_NIGHT:0 };
-  if (we > ws) {
-    splitAndClassify(ws, we, isWeekend, isHoliday, res);
+    const today = new Date().toISOString().slice(0,10);
+    document.getElementById('ngay').value = today;
+    document.getElementById('expFrom').value = today.slice(0,8) + '01';
+    document.getElementById('expTo').value = today;
   }
 
-  const travelH = travelHours(row);
-
-  const totalH = round(res.HC + res.OT_DAY + res.OT_NIGHT + res.WEEKEND_DAY +
-                       res.WEEKEND_NIGHT + res.HOLIDAY_DAY + res.HOLIDAY_NIGHT, 2);
-  const weighted = round(
-    res.HC*COEFF.HC + res.OT_DAY*COEFF.OT_DAY + res.OT_NIGHT*COEFF.OT_NIGHT +
-    res.WEEKEND_DAY*COEFF.WEEKEND_DAY + res.WEEKEND_NIGHT*COEFF.WEEKEND_NIGHT +
-    res.HOLIDAY_DAY*COEFF.HOLIDAY_DAY + res.HOLIDAY_NIGHT*COEFF.HOLIDAY_NIGHT +
-    travelH*COEFF.TRAVEL, 2);
-
-  sh.getRange(rowIndex, C.HC, 1, 10).setValues([[
-    round(res.HC,2), round(res.OT_DAY,2), round(res.OT_DEM||res.OT_NIGHT,2),
-    round(res.WEEKEND_DAY,2), round(res.WEEKEND_NIGHT,2),
-    round(res.HOLIDAY_DAY,2), round(res.HOLIDAY_NIGHT,2),
-    totalH, weighted, round(travelH,2)
-  ]]);
-}
-
-/**
- * Chia [startAbs, endAbs] thành các đoạn nhỏ theo ranh giới:
- *  360 (6:00) | 420 (7:00) | 690 (11:30) | 810 (13:30) | 1020 (17:00) | 1320 (22:00) | 1800 (6:00 hôm sau)
- * Rồi phân loại từng đoạn theo HC / OT / cuối tuần / lễ.
- */
-function splitAndClassify(startAbs, endAbs, isWeekend, isHoliday, res) {
-  const bounds = [360, 420, 690, 810, 1020, 1320, 1800];
-  const pts = {};
-  pts[startAbs] = 1; pts[endAbs] = 1;
-  bounds.forEach(b => { if (b > startAbs && b < endAbs) pts[b] = 1; });
-  const sorted = Object.keys(pts).map(Number).sort((a,b)=>a-b);
-
-  for (let i = 0; i < sorted.length - 1; i++) {
-    const s = sorted[i], e = sorted[i+1];
-    const hours = (e - s) / 60;
-    const mid = (s + e) / 2;
-
-    const isDay = (mid >= 360 && mid < 1320);     // 6:00–22:00
-    const inHC = (mid >= 420 && mid < 690) || (mid >= 810 && mid < 1020);
-
-    if (isHoliday) {
-      if (isDay) res.HOLIDAY_DAY += hours; else res.HOLIDAY_NIGHT += hours;
-    } else if (isWeekend) {
-      if (isDay) res.WEEKEND_DAY += hours; else res.WEEKEND_NIGHT += hours;
-    } else if (inHC) {
-      res.HC += hours;
-    } else if (isDay) {
-      res.OT_DAY += hours;
-    } else {
-      res.OT_NIGHT += hours;
-    }
-  }
-}
-
-/** Đổi giá trị ô (Date hoặc chuỗi 'HH:mm') thành phút kể từ 0:00 */
-function timeToAbs(v, plusIfNight) {
-  if (!v && v !== 0) return 0;
-  let h, m;
-  if (v instanceof Date) { h = v.getHours(); m = v.getMinutes(); }
-  else {
-    const s = String(v).trim();
-    const parts = s.split(':');
-    h = parseInt(parts[0], 10) || 0;
-    m = parseInt(parts[1], 10) || 0;
-  }
-  return h * 60 + m;
-}
-
-/** Tính tổng giờ di chuyển (đi + về) – hệ số 1 */
-function travelHours(row) {
-  let total = 0;
-  const pairs = [
-    [row[C.DC_DI_TU-1], row[C.DC_DI_DEN-1]],
-    [row[C.DC_VE_TU-1], row[C.DC_VE_DEN-1]]
-  ];
-  pairs.forEach(([a,b]) => {
-    if (a == null || a === '' || b == null || b === '') return;
-    let x = timeToAbs(a), y = timeToAbs(b);
-    if (y <= x) y += 1440;
-    total += (y - x) / 60;
-  });
-  return total;
-}
-
-function isHolidayDate(d) {
-  const sh = SS.getSheetByName(SHEETS.NGAYLE);
-  if (!sh || sh.getLastRow() < 2) return false;
-  const vals = sh.getRange(2,1, sh.getLastRow()-1, 1).getValues();
-  const key = Utilities.formatDate(d, Session.getScriptTimeZone(), 'yyyy-MM-dd');
-  return vals.some(r => r[0] && Utilities.formatDate(toDate(r[0]), Session.getScriptTimeZone(), 'yyyy-MM-dd') === key);
-}
-
-function toDate(v) {
-  if (v instanceof Date) return new Date(v);
-  const parts = String(v).split(/[\/\-]/);
-  if (parts.length === 3) {
-    // dd/mm/yyyy
-    if (parts[0].length <= 2 && parts[2].length === 4) {
-      return new Date(+parts[2], +parts[1]-1, +parts[0]);
-    }
-    // yyyy-mm-dd
-    if (parts[0].length === 4) {
-      return new Date(+parts[0], +parts[1]-1, +parts[2]);
-    }
-  }
-  return new Date(v);
-}
-
-function round(x, d) { const k = Math.pow(10, d); return Math.round(x*k)/k; }
-
-/************************************************************
- * TỔNG HỢP THEO THÁNG / NGƯỜI / LOẠI CÔNG TÁC
- ************************************************************/
-function buildSummary(params) {
-  const sh = SS.getSheetByName(SHEETS.NHATKY);
-  const last = sh.getLastRow();
-  if (last < 2) return { rows: [], headers: [] };
-  const data = sh.getRange(2,1,last-1, HEADERS.length).getValues();
-
-  const { fromDate, toDate: toD, employees, types } = params;
-  const filtered = data.filter(r => {
-    if (!r[C.NGAY-1]) return false;
-    const d = toDate(r[C.NGAY-1]); d.setHours(0,0,0,0);
-    if (d < fromDate || d > toD) return false;
-    if (employees && employees.length && employees.indexOf(r[C.MANV-1]) < 0) return false;
-    if (types && types.length && types.indexOf(r[C.LOAI_CT-1]) < 0) return false;
-    return true;
-  });
-
-  // Group: theo nhân viên + ngày  →  cộng dồn các giờ
-  const map = {}; // key = manv|yyyy-mm-dd
-  filtered.forEach(r => {
-    const d = toDate(r[C.NGAY-1]);
-    const key = r[C.MANV-1] + '|' + Utilities.formatDate(d, Session.getScriptTimeZone(), 'yyyy-MM-dd');
-    if (!map[key]) map[key] = {
-      manv: r[C.MANV-1], tennv: r[C.TENNV-1], ngay: d,
-      HC:0, OT_DAY:0, OT_NIGHT:0, WDAY:0, WNIGHT:0, HDAY:0, HNIGHT:0,
-      travel:0, details: {}, ct1:0, ct2:0, note: ''
+  function saveEntry() {
+    const p = {
+      ngay: document.getElementById('ngay').value,
+      manv: document.getElementById('manv').value,
+      loaiCT: document.getElementById('loaiCT').value,
+      maCT: document.getElementById('maCT').value,
+      hangMuc: document.getElementById('hangMuc').value,
+      tram: document.getElementById('tram').value,
+      ctType: document.getElementById('ctType').value,
+      gioBD: document.getElementById('gioBD').value,
+      gioKT: document.getElementById('gioKT').value,
+      dcDiTu: document.getElementById('dcDiTu').value,
+      dcDiDen: document.getElementById('dcDiDen').value,
+      dcVeTu: document.getElementById('dcVeTu').value,
+      dcVeDen: document.getElementById('dcVeDen').value,
+      ghiChu: document.getElementById('ghiChu').value
     };
-    const o = map[key];
-    o.HC += r[C.HC-1] || 0;
-    o.OT_DAY += r[C.OT_NGAY-1] || 0;
-    o.OT_NIGHT += r[C.OT_DEM-1] || 0;
-    o.WDAY += r[C.CUOITUAN_NGAY-1] || 0;
-    o.WNIGHT += r[C.CUOITUAN_DEM-1] || 0;
-    o.HDAY += r[C.LE_NGAY-1] || 0;
-    o.HNIGHT += r[C.LE_DEM-1] || 0;
-    o.travel += r[C.DI_CHUYEN-1] || 0;
+    if (!p.manv || !p.gioBD || !p.gioKT) {
+      alert('Nhập thiếu thông tin!'); return;
+    }
+    google.script.run.withSuccessHandler(r => {
+      document.getElementById('msg').textContent = '✅ Đã lưu dòng ' + r.row;
+      setTimeout(() => document.getElementById('msg').textContent = '', 2000);
+    }).addEntry(p);
+  }
 
-    const code = r[C.MA_CT-1] || r[C.LOAI_CT-1];
-    const totalRow = (r[C.HC-1]||0)+(r[C.OT_NGAY-1]||0)+(r[C.OT_DEM-1]||0)+
-                     (r[C.CUOITUAN_NGAY-1]||0)+(r[C.CUOITUAN_DEM-1]||0)+
-                     (r[C.LE_NGAY-1]||0)+(r[C.LE_DEM-1]||0);
-    if (!o.details[code]) o.details[code] = 0;
-    o.details[code] += totalRow;
-
-    const ct = r[C.CT_TYPE-1];
-    if (ct === 'CT1') o.ct1++;
-    if (ct === 'CT2') o.ct2++;
-
-    if (r[C.GHI_CHU-1]) o.note += (o.note? '; ':'') + r[C.GHI_CHU-1];
-  });
-
-  // Chuyển thành mảng, tính công SCL / ĐTXD (làm tròn >4h = 1 công)
-  const rows = Object.values(map).map(o => {
-    let congSCL = 0, congDTXD = 0, gioSCL = 0, gioDTXD = 0;
-    Object.keys(o.details).forEach(code => {
-      const h = o.details[code];
-      if (code === 'SCL' || /^SCL\d+$/.test(code)) {
-        gioSCL += h;
-      }
-      if (code === 'DTXD' || /^GOI\d+$/.test(code) || /^DTXD/.test(code)) {
-        gioDTXD += h;
-      }
-    });
-    if (gioSCL > 4) congSCL = 1;
-    if (gioDTXD > 4) congDTXD = 1;
-
-    const totalH = o.HC+o.OT_DAY+o.OT_NIGHT+o.WDAY+o.WNIGHT+o.HDAY+o.HNIGHT;
-    return {
-      ...o,
-      totalH: round(totalH,2),
-      congSCL, gioSCL: round(gioSCL,2),
-      congDTXD, gioDTXD: round(gioDTXD,2)
+  function doExport() {
+    const p = {
+      fromDate: new Date(document.getElementById('expFrom').value),
+      toDate: new Date(document.getElementById('expTo').value),
+      types: document.getElementById('expTypes').value.split(',').map(s=>s.trim()).filter(Boolean),
+      employees: document.getElementById('expNVs').value.split(',').map(s=>s.trim()).filter(Boolean)
     };
-  });
+    google.script.run.withSuccessHandler(r => {
+      window.open(r.url, '_blank');
+    }).exportExcel(p);
+  }
 
-  rows.sort((a,b) => a.manv.localeCompare(b.manv) || (a.ngay - b.ngay));
-  return { rows };
-}
-
-/************************************************************
- * XUẤT EXCEL (tạo file tạm trên Drive rồi trả link tải)
- ************************************************************/
-function exportExcel(params) {
-  const { rows } = buildSummary(params);
-  const name = 'ThongKe_' + Utilities.formatDate(params.fromDate,'GMT+7','yyyyMMdd') +
-               '_' + Utilities.formatDate(params.toDate,'GMT+7','yyyyMMdd');
-
-  const tmp = SpreadsheetApp.create(name);
-  const sh = tmp.getActiveSheet();
-  sh.setName('ChiTiet');
-
-  // Header
-  const hdr = ['Mã NV','Tên NV','Ngày','HC','OT ngày','OT đêm','CT ngày','CT đêm',
-               'Lễ ngày','Lễ đêm','Tổng giờ','CT1','CT2','Di chuyển',
-               'Giờ SCL','Công SCL','Giờ ĐTXD','Công ĐTXD','Chi tiết','Ghi chú'];
-  sh.getRange(1,1,1,hdr.length).setValues([hdr]).setFontWeight('bold').setBackground('#d9ead3');
-  sh.setFrozenRows(1);
-
-  const out = rows.map(r => {
-    const detailStr = Object.keys(r.details).map(k => k + '=' + round(r.details[k],2) + 'h').join(' | ');
-    return [
-      r.manv, r.tennv,
-      Utilities.formatDate(r.ngay,'GMT+7','dd/MM/yyyy'),
-      round(r.HC,2), round(r.OT_DAY,2), round(r.OT_NIGHT,2),
-      round(r.WDAY,2), round(r.WNIGHT,2), round(r.HDAY,2), round(r.HNIGHT,2),
-      r.totalH, r.ct1, r.ct2, round(r.travel,2),
-      r.gioSCL, r.congSCL, r.gioDTXD, r.congDTXD,
-      detailStr, r.note
-    ];
-  });
-  if (out.length) sh.getRange(2,1,out.length,hdr.length).setValues(out);
-
-  // Sheet phụ: tổng hợp theo nhân viên
-  const sh2 = tmp.insertSheet('TongHopNhanVien');
-  const agg = {};
-  rows.forEach(r => {
-    if (!agg[r.manv]) agg[r.manv] = { ten: r.tennv, total:0, scl:0, dtxd:0, ot:0, ct1:0, ct2:0, travel:0 };
-    agg[r.manv].total += r.totalH;
-    agg[r.manv].scl += r.gioSCL;
-    agg[r.manv].dtxd += r.gioDTXD;
-    agg[r.manv].ot += r.OT_DAY + r.OT_NIGHT + r.WDAY + r.WNIGHT + r.HDAY + r.HNIGHT;
-    agg[r.manv].ct1 += r.ct1;
-    agg[r.manv].ct2 += r.ct2;
-    agg[r.manv].travel += r.travel;
-  });
-  const h2 = ['Mã NV','Tên NV','Tổng giờ','Giờ SCL','Giờ ĐTXD','Giờ OT','Số CT1','Số CT2','Di chuyển'];
-  sh2.getRange(1,1,1,h2.length).setValues([h2]).setFontWeight('bold').setBackground('#cfe2f3');
-  const out2 = Object.keys(agg).map(k => [
-    k, agg[k].ten, round(agg[k].total,2), round(agg[k].scl,2), round(agg[k].dtxd,2),
-    round(agg[k].ot,2), agg[k].ct1, agg[k].ct2, round(agg[k].travel,2)
-  ]);
-  if (out2.length) sh2.getRange(2,1,out2.length,h2.length).setValues(out2);
-
-  // Cảnh báo OT > ngưỡng
-  const cauHinh = SS.getSheetByName(SHEETS.CAUHINH).getDataRange().getValues();
-  const nguongNgay = Number(cauHinh[8][1]) || 4;
-  const nguongThang = Number(cauHinh[9][1]) || 40;
-  const sh3 = tmp.insertSheet('CanhBao');
-  const warn = [['Mã NV','Ngày/Tháng','Loại','Giá trị','Ngưỡng']];
-  rows.forEach(r => {
-    const ot = r.OT_DAY + r.OT_NIGHT + r.WDAY + r.WNIGHT + r.HDAY + r.HNIGHT;
-    if (ot > nguongNgay) {
-      warn.push([r.manv, Utilities.formatDate(r.ngay,'GMT+7','dd/MM/yyyy'), 'OT/ngày', round(ot,2), nguongNgay]);
-    }
-  });
-  Object.keys(agg).forEach(k => {
-    if (agg[k].ot > nguongThang) {
-      warn.push([k, 'Cả kỳ', 'OT/tổng', round(agg[k].ot,2), nguongThang]);
-    }
-  });
-  sh3.getRange(1,1,warn.length,5).setValues(warn);
-  sh3.getRange(1,1,1,5).setFontWeight('bold').setBackground('#f4cccc');
-
-  // Chuyển sang XLSX
-  const file = DriveApp.getFileById(tmp.getId());
-  const blob = file.getBlob().setName(name + '.xlsx');
-  const url = 'https://docs.google.com/spreadsheets/d/' + tmp.getId() + '/export?format=xlsx';
-  return { url: url, id: tmp.getId(), name: name + '.xlsx' };
-}
-
-/************************************************************
- * LẤY DANH SÁCH CHO SIDEBAR
- ************************************************************/
-function getLists() {
-  const nv = SS.getSheetByName(SHEETS.NHANVIEN).getDataRange().getValues().slice(1)
-    .filter(r => r[0]).map(r => ({ ma: r[0], ten: r[1] }));
-  const tram = SS.getSheetByName(SHEETS.TRAM).getDataRange().getValues().slice(1)
-    .filter(r => r[0]).map(r => r[0]);
-  return { nhanvien: nv, tram: tram };
-}
-
-/** Nhập 1 dòng công tác từ sidebar */
-function addEntry(p) {
-  const sh = SS.getSheetByName(SHEETS.NHATKY);
-  const id = 'CT' + Utilities.formatDate(new Date(),'GMT+7','yyMMddHHmmss');
-  const nv = SS.getSheetByName(SHEETS.NHANVIEN).getDataRange().getValues()
-    .filter(r => r[0] === p.manv)[0] || [];
-  const row = new Array(HEADERS.length).fill('');
-  row[C.ID-1] = id;
-  row[C.NGAY-1] = p.ngay;
-  row[C.MANV-1] = p.manv;
-  row[C.TENNV-1] = nv[1] || '';
-  row[C.LOAI_CT-1] = p.loaiCT;
-  row[C.MA_CT-1] = p.maCT;
-  row[C.HANG_MUC-1] = p.hangMuc || '';
-  row[C.TRAM-1] = p.tram || '';
-  row[C.CT_TYPE-1] = p.ctType || '';
-  row[C.GIO_BD-1] = p.gioBD;
-  row[C.GIO_KT-1] = p.gioKT;
-  row[C.DC_DI_TU-1] = p.dcDiTu || '';
-  row[C.DC_DI_DEN-1] = p.dcDiDen || '';
-  row[C.DC_VE_TU-1] = p.dcVeTu || '';
-  row[C.DC_VE_DEN-1] = p.dcVeDen || '';
-  row[C.GHI_CHU-1] = p.ghiChu || '';
-  sh.appendRow(row);
-  const r = sh.getLastRow();
-  computeRow(r);
-  return { ok: true, row: r };
-}
+  function rebuild() {
+    google.script.run.rebuildAll();
+  }
+</script>
+</body>
+</html>
