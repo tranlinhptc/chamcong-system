@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Chấm công tác</title>
+<title>Chấm công - Công tác</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="congtac.css">
 </head>
@@ -12,7 +12,7 @@
 <div class="topbar">
   <div class="topbar-left">
     <span class="logo">📝</span>
-    <span class="title">Chấm công tác</span>
+    <span class="title">Chấm công - Công tác</span>
   </div>
   <div class="topbar-right">
     <span id="userInfo" class="user-info"></span>
@@ -21,75 +21,311 @@
   </div>
 </div>
 
+<!-- 5 TAB -->
+<div class="tabs-ct">
+  <button class="tab-ct active" onclick="switchTab(0,this)">📋 Công tác</button>
+  <button class="tab-ct" onclick="switchTab(1,this)">💤 Nghỉ</button>
+  <button class="tab-ct" onclick="switchTab(2,this)">🔄 Nghỉ bù</button>
+  <button class="tab-ct" onclick="switchTab(3,this)">☢️ Độc hại</button>
+  <button class="tab-ct" onclick="switchTab(4,this)">📊 Tổng hợp</button>
+</div>
+
 <div class="container-ct">
 
-  <!-- HEADER CHUYẾN -->
-  <div class="card-ct">
-    <h3>📋 Thông tin chuyến công tác</h3>
+  <!-- ============ TAB 0: CÔNG TÁC ============ -->
+  <div class="tab-content active" id="tab0">
 
-    <div class="grid-2">
-      <div class="field">
-        <label>Ngày:</label>
-        <input type="date" id="fNgay" onchange="updatePreview()">
+    <!-- Loại công tác -->
+    <div class="card-ct">
+      <h3>1️⃣ Loại công tác</h3>
+      <div class="radio-group">
+        <label><input type="radio" name="loaiChinh" value="SX" onchange="onLoaiChinhChange()"> SX (SXKD/SXD/SCTX)</label>
+        <label><input type="radio" name="loaiChinh" value="SCL" onchange="onLoaiChinhChange()"> SCL</label>
+        <label><input type="radio" name="loaiChinh" value="ĐTXD" onchange="onLoaiChinhChange()"> ĐTXD</label>
       </div>
-      <div class="field">
-        <label>Trạm (1-20):</label>
-        <input type="number" id="fTram" min="0" max="20" placeholder="VD: 5">
+      <div class="field" id="fieldHangMucCT" style="display:none">
+        <label>Hạng mục:</label>
+        <select id="fHangMucCT"></select>
       </div>
     </div>
 
-    <div class="field">
-      <label>Địa điểm:</label>
-      <input type="text" id="fDiaDiem" placeholder="VD: Trạm 5 - Đà Lạt">
+    <!-- Ngày + Mô tả chuyến -->
+    <div class="card-ct">
+      <h3>2️⃣ Thông tin chuyến</h3>
+      <div class="grid-2">
+        <div class="field">
+          <label>Ngày chấm:</label>
+          <input type="date" id="fNgay" onchange="updatePreviewCT()">
+        </div>
+        <div class="field">
+          <label>Trạm (1-20):</label>
+          <input type="number" id="fTram" min="0" max="20" placeholder="VD: 5">
+        </div>
+      </div>
+      <div class="field">
+        <label>Mô tả chung:</label>
+        <input type="text" id="fMoTa" placeholder="VD: Thí nghiệm MBA 500kV">
+      </div>
     </div>
 
-    <div class="grid-2">
+    <!-- Di chuyển đi -->
+    <div class="card-ct">
+      <div class="card-head">
+        <h3>3️⃣ 🚗 Di chuyển đi</h3>
+        <label class="toggle">
+          <input type="checkbox" id="cbDiChuyenDi" onchange="toggleBlock('blockDiChuyenDi', this.checked, 'diChuyenDi')">
+          <span>Có di chuyển đi</span>
+        </label>
+      </div>
+      <div id="blockDiChuyenDi" style="display:none">
+        <div class="grid-2">
+          <div class="field">
+            <label>Từ:</label>
+            <input type="datetime-local" id="dcdTu" onchange="updatePreviewCT()">
+          </div>
+          <div class="field">
+            <label>Đến:</label>
+            <input type="datetime-local" id="dcdDen" onchange="updatePreviewCT()">
+          </div>
+        </div>
+        <label class="chip-label">Người tham gia:</label>
+        <div class="chip-tools">
+          <button onclick="selectAllBlock('blockDiChuyenDi')">✅ Chọn tất cả</button>
+          <button onclick="clearAllBlock('blockDiChuyenDi')">❌ Bỏ chọn</button>
+        </div>
+        <div class="chip-grid" id="chipDCD"></div>
+        <div class="chip-info">Đã chọn: <b class="chip-count">0</b> người</div>
+      </div>
+    </div>
+
+    <!-- Danh sách công tác -->
+    <div class="card-ct">
+      <div class="card-head">
+        <h3>4️⃣ 🔧 Công tác chính</h3>
+        <button class="btn btn-primary btn-sm" onclick="addCongTac()">+ Thêm công tác</button>
+      </div>
+      <div id="listCongTac"></div>
+    </div>
+
+    <!-- Di chuyển về -->
+    <div class="card-ct">
+      <div class="card-head">
+        <h3>5️⃣ 🚗 Di chuyển về</h3>
+        <label class="toggle">
+          <input type="checkbox" id="cbDiChuyenVe" onchange="toggleBlock('blockDiChuyenVe', this.checked, 'diChuyenVe')">
+          <span>Có di chuyển về</span>
+        </label>
+      </div>
+      <div id="blockDiChuyenVe" style="display:none">
+        <div class="grid-2">
+          <div class="field">
+            <label>Từ:</label>
+            <input type="datetime-local" id="dcvTu" onchange="updatePreviewCT()">
+          </div>
+          <div class="field">
+            <label>Đến:</label>
+            <input type="datetime-local" id="dcvDen" onchange="updatePreviewCT()">
+          </div>
+        </div>
+        <label class="chip-label">Người tham gia:</label>
+        <div class="chip-tools">
+          <button onclick="selectAllBlock('blockDiChuyenVe')">✅ Chọn tất cả</button>
+          <button onclick="clearAllBlock('blockDiChuyenVe')">❌ Bỏ chọn</button>
+        </div>
+        <div class="chip-grid" id="chipDCV"></div>
+        <div class="chip-info">Đã chọn: <b class="chip-count">0</b> người</div>
+      </div>
+    </div>
+
+    <!-- Preview + Save -->
+    <div class="preview-box" id="previewCT">
+      <b>📊 Tổng:</b> <span id="previewCTText">0 người • 0h gốc → 0h hệ số</span>
+    </div>
+
+    <div class="actions-ct">
+      <button class="btn" onclick="resetFormCT()">🔄 Làm mới</button>
+      <button class="btn btn-primary" onclick="saveFormCT()">💾 Lưu công tác</button>
+    </div>
+  </div>
+
+  <!-- ============ TAB 1: NGHỈ ============ -->
+  <div class="tab-content" id="tab1">
+    <div class="card-ct">
+      <h3>💤 Chấm nghỉ</h3>
+      <div class="field">
+        <label>Loại nghỉ:</label>
+        <select id="nLoai">
+          <option value="P">P — Nghỉ phép</option>
+          <option value="Ô">Ô — Nghỉ ốm</option>
+          <option value="L">L — Nghỉ lễ</option>
+          <option value="BL">BL — Nghỉ bù lễ</option>
+          <option value="T">T — Tai nạn LĐ</option>
+          <option value="TSn">TSn — Thai sản</option>
+          <option value="Cô">Cô — Con ốm</option>
+          <option value="R">R — Việc riêng có lương</option>
+          <option value="NM">NM — Nghỉ mát</option>
+          <option value="KL">KL — Không lương</option>
+          <option value="NKL">NKL — Nghỉ việc không lương</option>
+          <option value="Ko">Ko — Không lý do</option>
+        </select>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Từ ngày:</label>
+          <input type="date" id="nTuNgay" onchange="updatePreviewNghi()">
+        </div>
+        <div class="field">
+          <label>Đến ngày:</label>
+          <input type="date" id="nDenNgay" onchange="updatePreviewNghi()">
+        </div>
+      </div>
+      <div class="field">
+        <label>Lý do:</label>
+        <input type="text" id="nLyDo" placeholder="VD: Nghỉ phép năm">
+      </div>
+      <label class="chip-label">Người nghỉ:</label>
+      <div class="chip-tools">
+        <button onclick="selectAllBlock('blockNghi')">✅ Chọn tất cả</button>
+        <button onclick="clearAllBlock('blockNghi')">❌ Bỏ chọn</button>
+      </div>
+      <div class="chip-grid" id="chipNghi"></div>
+      <div class="chip-info">Đã chọn: <b class="chip-count">0</b> người</div>
+
+      <div class="preview-box">
+        <b>📊 Tổng:</b> <span id="previewNghiText">0 người × 0 ngày = 0 ngày công</span>
+      </div>
+
+      <div class="actions-ct">
+        <button class="btn" onclick="resetFormNghi()">🔄 Làm mới</button>
+        <button class="btn btn-primary" onclick="saveFormNghi()">💾 Lưu nghỉ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 2: NGHỈ BÙ ============ -->
+  <div class="tab-content" id="tab2">
+    <div class="card-ct">
+      <h3>🔄 Nghỉ bù</h3>
+      <label class="chip-label">Người nghỉ bù:</label>
+      <div class="chip-tools">
+        <button onclick="selectAllBlock('blockNghiBu')">✅ Chọn tất cả</button>
+        <button onclick="clearAllBlock('blockNghiBu')">❌ Bỏ chọn</button>
+      </div>
+      <div class="chip-grid" id="chipNghiBu"></div>
+      <div class="chip-info">Đã chọn: <b class="chip-count">0</b> người</div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label>Từ ngày:</label>
+          <input type="date" id="nbTuNgay">
+        </div>
+        <div class="field">
+          <label>Đến ngày:</label>
+          <input type="date" id="nbDenNgay">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Số giờ:</label>
+          <select id="nbSoGio">
+            <option value="8">8 giờ</option>
+            <option value="4">4 giờ</option>
+            <option value="6">6 giờ</option>
+            <option value="2">2 giờ</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>⚠️ Trừ vào tháng:</label>
+          <input type="month" id="nbThangTruGio">
+        </div>
+      </div>
+      <div class="field">
+        <label>Lý do:</label>
+        <input type="text" id="nbLyDo" placeholder="VD: Nghỉ bù công tác T9">
+      </div>
+
+      <div class="preview-box">
+        <b>📊 Tổng:</b> <span id="previewNghiBuText">0 người × 8h = 0h</span>
+      </div>
+
+      <div class="actions-ct">
+        <button class="btn" onclick="resetFormNghiBu()">🔄 Làm mới</button>
+        <button class="btn btn-primary" onclick="saveFormNghiBu()">💾 Lưu nghỉ bù</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 3: ĐỘC HẠI ============ -->
+  <div class="tab-content" id="tab3">
+    <div class="card-ct">
+      <h3>☢️ Chấm độc hại</h3>
+      <div class="field">
+        <label>Mức độ:</label>
+        <select id="dhMucDo">
+          <option value="DH">DH — Cả ngày</option>
+          <option value="½DH">½DH — Nửa ngày</option>
+        </select>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Từ ngày:</label>
+          <input type="date" id="dhTuNgay">
+        </div>
+        <div class="field">
+          <label>Đến ngày:</label>
+          <input type="date" id="dhDenNgay">
+        </div>
+      </div>
+      <div class="field">
+        <label>Ghi chú:</label>
+        <input type="text" id="dhGhiChu" placeholder="VD: Thí nghiệm môi trường độc hại">
+      </div>
+      <label class="chip-label">Người tham gia:</label>
+      <div class="chip-tools">
+        <button onclick="selectAllBlock('blockDocHai')">✅ Chọn tất cả</button>
+        <button onclick="clearAllBlock('blockDocHai')">❌ Bỏ chọn</button>
+      </div>
+      <div class="chip-grid" id="chipDocHai"></div>
+      <div class="chip-info">Đã chọn: <b class="chip-count">0</b> người</div>
+
+      <div class="actions-ct">
+        <button class="btn" onclick="resetFormDocHai()">🔄 Làm mới</button>
+        <button class="btn btn-primary" onclick="saveFormDocHai()">💾 Lưu độc hại</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 4: TỔNG HỢP ============ -->
+  <div class="tab-content" id="tab4">
+    <div class="card-ct">
+      <h3>📊 Lọc dữ liệu & Xuất Excel</h3>
+      <div class="field">
+        <label>Tháng (có thể chọn nhiều):</label>
+        <input type="month" id="tThang">
+      </div>
       <div class="field">
         <label>Loại công tác:</label>
-        <select id="fLoaiCT" onchange="onLoaiChange()">
-          <option value="">-- Chọn --</option>
-          <option value="SXKD">SXKD</option>
-          <option value="SCTX">SCTX</option>
-          <option value="SCL">SCL</option>
-          <option value="ĐTXD">ĐTXD</option>
-          <option value="GS">GS (Giám sát)</option>
-          <option value="KN">KN (Kiểm nhận)</option>
-        </select>
+        <div class="checkbox-group">
+          <label><input type="checkbox" class="tLoai" value="SX" checked> SX</label>
+          <label><input type="checkbox" class="tLoai" value="SCL" checked> SCL</label>
+          <label><input type="checkbox" class="tLoai" value="ĐTXD" checked> ĐTXD</label>
+        </div>
       </div>
       <div class="field">
-        <label>Hạng mục:</label>
-        <select id="fHangMuc">
-          <option value="">-- Chọn hạng mục --</option>
-        </select>
+        <label>Chế độ xuất:</label>
+        <div class="radio-group">
+          <label><input type="radio" name="tMode" value="full" checked> Chi tiết + Tổng</label>
+          <label><input type="radio" name="tMode" value="sum"> Chỉ tổng hợp</label>
+        </div>
       </div>
+
+      <div class="actions-ct">
+        <button class="btn" onclick="loadTongHop()">🔄 Tải dữ liệu</button>
+        <button class="btn btn-success" onclick="exportExcel()">📊 Xuất Excel</button>
+      </div>
+
+      <div id="tongHopPreview" style="margin-top:15px"></div>
     </div>
-
-    <div class="field">
-      <label>Mô tả:</label>
-      <input type="text" id="fMoTa" placeholder="VD: Thí nghiệm MBA 500kV">
-    </div>
-  </div>
-
-  <!-- CHI TIẾT -->
-  <div class="card-ct">
-    <div class="card-head">
-      <h3>🕒 Khung giờ & Người tham gia</h3>
-      <button class="btn btn-primary btn-sm" onclick="addBlock()">+ Thêm khung giờ</button>
-    </div>
-
-    <div id="blocksWrap"></div>
-
-    <div class="preview-box" id="previewBox">
-      <b>📊 Tổng:</b> <span id="previewText">0h gốc → 0h hệ số</span>
-    </div>
-  </div>
-
-  <!-- ACTIONS -->
-  <div class="actions-ct">
-    <button class="btn" onclick="resetForm()">🔄 Làm mới</button>
-    <button class="btn btn-primary" id="btnSave" onclick="saveForm()">
-      💾 Lưu công tác
-    </button>
   </div>
 
 </div>
