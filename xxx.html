@@ -605,18 +605,47 @@ function renderWarn(data) {
 }
 
 function exportMonth() {
-  const m = document.getElementById('fMonth').value;
-  if (!m) { alert('Chọn tháng'); return; }
-  const [year, month] = m.split('-').map(Number);
-  const viewCode = document.getElementById('fViewCode').value;
+  // 1. Kiểm tra xem đã bấm "Xem" chưa để có dữ liệu
+  if (!cachedMonth) {
+    alert('Vui lòng bấm nút "🔍 Xem" để tải dữ liệu tháng trước khi xuất Excel!');
+    return;
+  }
+  
+  const { year, month, days, holidays, staffRows } = cachedMonth;
+  
+  // 2. Tạo tiêu đề cột
+  const headers = ['Mã NV', 'Tên ngắn'];
+  for (let d = 1; d <= days; d++) headers.push(String(d)); // Cột ngày 1 -> 31
+  headers.push('Tổng Ngày', 'Tổng Đêm', 'OT Ngày', 'OT Đêm', 'Tổng HS', 'CT1', 'CT2', 'Tổng DC');
 
-  fetch(API + '?' + new URLSearchParams({action:'exportMonth', year, month, viewCode}))
-    .then(r=>r.json())
-    .then(d => {
-      if (d.error) { alert(d.error); return; }
-      window.open(d.url, '_blank');
-    })
-    .catch(err => alert('Lỗi: ' + err.message));
+  // 3. Tạo dữ liệu từng dòng
+  const aoa = [headers];
+  staffRows.forEach(r => {
+    const row = [r.staffId, r.shortName];
+    for (let d = 1; d <= days; d++) {
+      row.push(r.cells[d] || ''); // Lấy dữ liệu ô ngày
+    }
+    row.push(
+      r.totalDay.toFixed(1), r.totalNight.toFixed(1), 
+      r.otDay.toFixed(1), r.otNight.toFixed(1), 
+      r.totalCoef.toFixed(2), r.ct1 || '', r.ct2 || '', r.travel.toFixed(1)
+    );
+    aoa.push(row);
+  });
+
+  // 4. Dùng SheetJS để tạo file
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'ThongKeThang');
+  
+  // 5. Chỉnh độ rộng cột cho đẹp
+  const wscols = [{wch:8}, {wch:15}]; // Cột Mã, Tên
+  for(let i=0; i<days; i++) wscols.push({wch:7}); // Cột ngày
+  for(let i=0; i<8; i++) wscols.push({wch:10}); // Cột tổng
+  ws['!cols'] = wscols;
+
+  // 6. Tải file trực tiếp về máy
+  XLSX.writeFile(wb, `BangChamCong_${year}_${String(month).padStart(2,'0')}.xlsx`);
 }
 
 /* ===== HOLIDAY ===== */
