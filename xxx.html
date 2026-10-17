@@ -3,258 +3,267 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hệ Thống Timesheet - Tổ Thí Nghiệm</title>
+  <title>Hệ Thống Timesheet</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
   <style>
-    body { background-color: #f0f2f5; font-size: 14px; }
-    .card { box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 12px; border: none; }
-    .nav-tabs .nav-link.active { font-weight: bold; color: #0d6efd; border-bottom: 3px solid #0d6efd; }
-    .table-responsive { max-height: 620px; overflow-y: auto; }
-    thead { position: sticky; top: 0; background: #fff; z-index: 10; }
-    .warn-row { background-color: #fff3cd !important; }
-    .hidden { display: none !important; }
-    .filter-box { background: #f8f9fa; border-radius: 8px; padding: 12px; border: 1px solid #e3e6ea; }
-    .cell-hc { background:#e7f1ff; } .cell-ot { background:#fff3cd; }
-    .cell-night { background:#e2d9f3; } .cell-weekend { background:#d1e7dd; }
-    .cell-holiday { background:#f8d7da; }
-    #thongkeTable { font-size: 12.5px; }
-    #thongkeTable th, #thongkeTable td { white-space: nowrap; }
+    body { background:#f0f2f5; font-size:14px; }
+    .card { box-shadow:0 4px 12px rgba(0,0,0,.1); border-radius:12px; border:0; }
+    .nav-tabs .nav-link.active { font-weight:bold; color:#0d6efd; border-bottom:3px solid #0d6efd; }
+
+    /* ===== CHIP 24 NV DẠNG 4x6 ===== */
+    .emp-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .emp-chip {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 10px; border: 2px solid #dee2e6; border-radius: 8px;
+      cursor: pointer; user-select: none; background: #fff;
+      transition: all .15s; font-size: 13px; font-weight: 500;
+    }
+    .emp-chip:hover { border-color: #0d6efd; background: #f0f7ff; }
+    .emp-chip input { margin: 0; cursor: pointer; }
+    .emp-chip input:checked + span { color: #0d6efd; font-weight: 700; }
+    .emp-chip.checked { border-color: #0d6efd; background: #e7f1ff; }
+
+    /* ===== BẢNG THÁNG ===== */
+    .table-responsive { max-height: 70vh; overflow-y: auto; }
+    #monthTable { font-size: 12px; }
+    #monthTable th, #monthTable td {
+      padding: 4px 6px; white-space: nowrap; text-align: center;
+    }
+    #monthTable th:first-child, #monthTable td:first-child,
+    #monthTable th:nth-child(2), #monthTable td:nth-child(2) {
+      position: sticky; background: #f8f9fa; z-index: 5;
+    }
+    #monthTable th:nth-child(1) { left: 0; }
+    #monthTable th:nth-child(2) { left: 50px; }
+    #monthTable td:nth-child(1) { left: 0; background: #f8f9fa; }
+    #monthTable td:nth-child(2) { left: 50px; background: #f8f9fa; }
+    thead { position: sticky; top: 0; z-index: 6; }
+    .col-day { min-width: 55px; max-width: 80px; }
+    .cell-t7 { background: #fff4e6 !important; }
+    .cell-cn { background: #ffe0e0 !important; }
+    .cell-le { background: #ffd6d6 !important; font-weight: 600; }
+    .cell-work { background: #e7f1ff !important; }
+    .cell-leave { background: #e2d9f3 !important; }
+    .cell-warn { box-shadow: inset 0 0 0 2px #dc3545; }
+    .total-col { background: #e8f5e9 !important; font-weight: 600; }
   </style>
 </head>
 <body>
 
-<div class="container-fluid my-4 px-4">
-  <h3 class="text-center mb-4 fw-bold text-uppercase text-primary">Phần mềm Quản lý Khối lượng & Chấm công</h3>
+<div class="container-fluid my-4 px-3">
+  <h3 class="text-center mb-3 fw-bold text-uppercase text-primary">Phần mềm Quản lý Khối lượng & Chấm công</h3>
 
-  <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
-    <li class="nav-item"><button class="nav-link active" id="nhap-tab" data-bs-toggle="tab" data-bs-target="#nhap" type="button">📝 Nhập liệu</button></li>
-    <li class="nav-item"><button class="nav-link" id="thongke-tab" data-bs-toggle="tab" data-bs-target="#thongke" type="button" onclick="onTabThongKe()">📊 Thống kê & Xuất Excel</button></li>
-    <li class="nav-item"><button class="nav-link" id="caidat-tab" data-bs-toggle="tab" data-bs-target="#caidat" type="button" onclick="loadConfig()">⚙️ Cấu hình</button></li>
+  <ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#nhap">📝 Nhập liệu</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#thang" onclick="loadMonth()">📅 Bảng tháng</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#caidat" onclick="loadConfig()">⚙️ Cấu hình</button></li>
   </ul>
 
   <div class="tab-content">
 
-    <!-- ============ TAB 1: NHẬP LIỆU ============ -->
+    <!-- ==================== TAB NHẬP ==================== -->
     <div class="tab-pane fade show active" id="nhap">
-      <div class="card p-4 mx-auto" style="max-width: 960px;">
-        <form id="timeForm" novalidate>
+      <div class="card p-4 mx-auto" style="max-width: 900px;">
+        <form id="frm" novalidate>
 
-          <!-- Nhân sự + Ngày -->
-          <div class="row">
-            <div class="col-md-7 mb-3">
-              <label class="form-label fw-bold text-danger">👥 Chọn nhân sự (có thể chọn nhiều):</label>
-              <select class="form-control" id="nhanVienSelect" multiple required></select>
-            </div>
-            <div class="col-md-5 mb-3">
-              <label class="form-label fw-bold">Ngày công tác:</label>
-              <input type="date" class="form-control" id="ngayLamViec" required>
-              <small class="text-muted">Tính từ 06:00 hôm nay → 06:00 hôm sau</small>
+          <!-- Chọn nhân sự 4x6 -->
+          <div class="mb-3">
+            <label class="form-label fw-bold text-danger">👥 Chọn nhân sự (bấm để chọn):</label>
+            <div class="emp-grid" id="empGrid"></div>
+            <div class="mt-2">
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleAll(true)">Chọn tất cả</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleAll(false)">Bỏ chọn</button>
+              <span class="ms-2 text-muted">Đã chọn: <b id="cntSelected">0</b>/24</span>
             </div>
           </div>
 
-          <!-- Loại CT + Mã CT + Hạng mục -->
+          <hr>
+
+          <!-- Loại + Mã + Trạm -->
           <div class="row">
             <div class="col-md-4 mb-3">
               <label class="form-label fw-bold">Loại công tác:</label>
-              <select class="form-select" id="loaiCongTac" required>
-                <option value="SANXUAT">Công tác Sản xuất</option>
-                <option value="SCL">Sửa chữa lớn (SCL)</option>
-                <option value="DTXD">Đầu tư Xây dựng (ĐTXD)</option>
-                <option value="CT">Công tác CT1/CT2</option>
-                <option value="H">Đi học (H)</option>
-                <option value="P">Nghỉ phép (P)</option>
-                <option value="NGHIBU">Nghỉ bù</option>
-                <option value="DIEUDUONG">Nghỉ điều dưỡng</option>
-                <option value="THAISAN">Nghỉ thai sản</option>
-                <option value="OM">Nghỉ ốm đau</option>
-                <option value="KHAC">Khác</option>
+              <select class="form-select" id="loaiCT" required>
+                <optgroup label="Làm việc">
+                  <option value="SANXUAT">Sản xuất (SX)</option>
+                  <option value="SCL">Sửa chữa lớn (SCL)</option>
+                  <option value="DTXD">Đầu tư xây dựng (ĐTXD)</option>
+                  <option value="CT">Công tác (CT)</option>
+                </optgroup>
+                <optgroup label="Nghỉ / Học">
+                  <option value="P">Nghỉ phép (P)</option>
+                  <option value="H">Đi học (H)</option>
+                  <option value="NGHIBU">Nghỉ bù</option>
+                  <option value="DIEUDUONG">Nghỉ điều dưỡng</option>
+                  <option value="THAISAN">Nghỉ thai sản</option>
+                  <option value="OM">Nghỉ ốm đau</option>
+                  <option value="KHAC">Khác</option>
+                </optgroup>
               </select>
             </div>
-            <div class="col-md-4 mb-3" id="groupMaCT">
-              <label class="form-label fw-bold">Mã CT <span class="text-muted">(SCL1, SCL2, Gói 1…)</span>:</label>
-              <input class="form-control" id="maCT" list="maCTList" placeholder="VD: SCL1">
-              <datalist id="maCTList">
-                <option value="SCL1"><option value="SCL2"><option value="SCL3">
-                <option value="SCL4"><option value="SCL5">
-                <option value="Gói 1"><option value="Gói 2"><option value="Gói 3">
-              </datalist>
+            <div class="col-md-4 mb-3" id="groupMa">
+              <label class="form-label fw-bold">Mã / Hạng mục:</label>
+              <input class="form-control" id="maCT" list="maList" placeholder="VD: SCL1, SCL2, Gói 1">
+              <datalist id="maList"></datalist>
             </div>
             <div class="col-md-4 mb-3" id="groupHangMuc">
-              <label class="form-label fw-bold">Hạng mục:</label>
+              <label class="form-label fw-bold">Mô tả hạng mục:</label>
               <input class="form-control" id="hangMuc" placeholder="VD: Thay cuộn cắt">
             </div>
           </div>
 
-          <!-- Trạm + CT1/CT2 -->
           <div class="row" id="groupTram">
             <div class="col-md-8 mb-3">
-              <label class="form-label fw-bold">Trạm thực hiện:</label>
+              <label class="form-label fw-bold">Trạm:</label>
               <select class="form-select" id="tram"></select>
             </div>
             <div class="col-md-4 mb-3">
               <label class="form-label fw-bold">CT1 / CT2:</label>
               <select class="form-select" id="ctType">
-                <option value="">-- Tự động --</option>
-                <option value="CT1">CT1 (đi & về trong ngày)</option>
-                <option value="CT2">CT2 (qua đêm / nhiều ngày)</option>
+                <option value="">Tự động</option>
+                <option value="CT1">CT1</option>
+                <option value="CT2">CT2</option>
               </select>
-              <small class="text-muted" id="baoLocHint" style="display:none">⚠️ Trạm Bảo Lộc: không tính CT</small>
+              <small class="text-muted d-none" id="baoLocHint">⚠️ Bảo Lộc: không tính CT</small>
             </div>
           </div>
 
-          <!-- Giờ làm việc -->
-          <div class="row" id="groupGio">
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-bold">Giờ bắt đầu:</label>
-              <input type="time" class="form-control" id="batDau" value="07:00">
+          <!-- ===== CÔNG TÁC / DI CHUYỂN ===== -->
+          <div id="sectionWork" class="border rounded p-3 mb-3 bg-light">
+            <h6 class="fw-bold text-primary mb-3">🛠️ Công tác & Di chuyển</h6>
+
+            <div class="row">
+              <div class="col-md-6 mb-2">
+                <label class="form-label fw-bold small">🚗 Di chuyển ĐI — Từ:</label>
+                <input type="datetime-local" class="form-control" id="dcDiTu">
+              </div>
+              <div class="col-md-6 mb-2">
+                <label class="form-label fw-bold small">Đến:</label>
+                <input type="datetime-local" class="form-control" id="dcDiDen">
+              </div>
             </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-bold">Giờ kết thúc:</label>
-              <input type="time" class="form-control" id="ketThuc" value="17:00">
-              <small class="text-muted">Nếu KT &lt; BĐ → hiểu là qua nửa đêm</small>
+
+            <div class="row">
+              <div class="col-md-6 mb-2">
+                <label class="form-label fw-bold small text-success">🔧 Công tác — Từ:</label>
+                <input type="datetime-local" class="form-control" id="gIoBD">
+              </div>
+              <div class="col-md-6 mb-2">
+                <label class="form-label fw-bold small">Đến:</label>
+                <input type="datetime-local" class="form-control" id="gIoKT">
+              </div>
             </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-2">
+                <label class="form-label fw-bold small">🚗 Di chuyển VỀ — Từ:</label>
+                <input type="datetime-local" class="form-control" id="dcVeTu">
+              </div>
+              <div class="col-md-6 mb-2">
+                <label class="form-label fw-bold small">Đến:</label>
+                <input type="datetime-local" class="form-control" id="dcVeDen">
+              </div>
+            </div>
+
+            <small class="text-muted">
+              💡 Đi ngày 1, làm việc ngày 2–3, về ngày 4 cũng được — mỗi ô nhập datetime riêng.
+            </small>
           </div>
 
-          <!-- Di chuyển 4 mốc -->
-          <div class="row" id="groupDiChuyen">
-            <div class="col-12 mb-1"><label class="form-label fw-bold">🛣️ Di chuyển (hệ số 1 cho mọi loại CT):</label></div>
-            <div class="col-md-3 mb-3">
-              <label class="form-label">Đi — Từ:</label>
-              <input type="time" class="form-control" id="dcDiTu">
+          <!-- ===== NGHỈ (chỉ ngày) ===== -->
+          <div id="sectionLeave" class="border rounded p-3 mb-3 bg-light d-none">
+            <h6 class="fw-bold text-warning mb-3">🌴 Thời gian nghỉ</h6>
+            <div class="row">
+              <div class="col-md-4 mb-2">
+                <label class="form-label fw-bold small">Từ ngày:</label>
+                <input type="date" class="form-control" id="leaveFrom">
+              </div>
+              <div class="col-md-4 mb-2">
+                <label class="form-label fw-bold small">Đến ngày:</label>
+                <input type="date" class="form-control" id="leaveTo">
+              </div>
+              <div class="col-md-4 mb-2 d-none" id="groupNghiBu">
+                <label class="form-label fw-bold small">Số giờ bù:</label>
+                <input type="number" class="form-control" id="leaveHours" step="0.5" min="0">
+                <small class="text-muted">Auto = 8h × số ngày</small>
+              </div>
             </div>
-            <div class="col-md-3 mb-3">
-              <label class="form-label">Đi — Đến:</label>
-              <input type="time" class="form-control" id="dcDiDen">
-            </div>
-            <div class="col-md-3 mb-3">
-              <label class="form-label">Về — Từ:</label>
-              <input type="time" class="form-control" id="dcVeTu">
-            </div>
-            <div class="col-md-3 mb-3">
-              <label class="form-label">Về — Đến:</label>
-              <input type="time" class="form-control" id="dcVeDen">
-            </div>
+            <small class="text-muted">Nghỉ luôn tính hết giờ hành chính, không cần chọn giờ.</small>
           </div>
 
-          <!-- Ghi chú -->
           <div class="mb-3">
             <label class="form-label fw-bold">Ghi chú:</label>
             <input class="form-control" id="ghiChu">
           </div>
 
-          <div class="text-center mt-3">
-            <button type="submit" class="btn btn-primary btn-lg px-5" id="btnSubmit">💾 Lưu Dữ Liệu</button>
-            <button type="button" class="btn btn-outline-secondary btn-lg px-4" onclick="resetForm()">🔄 Làm mới</button>
+          <div class="text-center">
+            <button type="submit" class="btn btn-primary btn-lg px-5" id="btnSave">💾 Lưu</button>
+            <button type="button" class="btn btn-outline-secondary btn-lg" onclick="resetForm()">🔄 Làm mới</button>
           </div>
-
-          <div class="mt-3 text-center" id="statusMsg"></div>
+          <div id="msg" class="text-center mt-3"></div>
         </form>
       </div>
     </div>
 
-    <!-- ============ TAB 2: THỐNG KÊ ============ -->
-    <div class="tab-pane fade" id="thongke">
-      <div class="card p-4">
-
-        <!-- Bộ lọc -->
-        <div class="filter-box mb-3">
-          <div class="row g-2 align-items-end">
-            <div class="col-md-2">
-              <label class="form-label">Từ ngày</label>
-              <input type="date" class="form-control" id="fFrom">
-            </div>
-            <div class="col-md-2">
-              <label class="form-label">Đến ngày</label>
-              <input type="date" class="form-control" id="fTo">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">Nhân sự (trống = tất cả)</label>
-              <select class="form-select" id="fNhanVien" multiple></select>
-            </div>
-            <div class="col-md-2">
-              <label class="form-label">Loại CT (trống = tất cả)</label>
-              <select class="form-select" id="fLoaiCT" multiple>
-                <option value="SANXUAT">Sản xuất</option>
-                <option value="SCL">SCL</option>
-                <option value="DTXD">ĐTXD</option>
-                <option value="CT">CT</option>
-                <option value="H">H</option>
-                <option value="P">P</option>
-                <option value="NGHIBU">Nghỉ bù</option>
-                <option value="DIEUDUONG">Điều dưỡng</option>
-                <option value="THAISAN">Thai sản</option>
-                <option value="OM">Ốm</option>
-                <option value="KHAC">Khác</option>
-              </select>
-            </div>
-            <div class="col-md-2">
-              <label class="form-label">Mã CT cụ thể</label>
-              <select class="form-select" id="fMaCT" multiple></select>
-            </div>
-            <div class="col-md-1">
-              <button class="btn btn-primary w-100" onclick="loadData()">🔍 Xem</button>
-            </div>
+    <!-- ==================== TAB THÁNG ==================== -->
+    <div class="tab-pane fade" id="thang">
+      <div class="card p-3">
+        <div class="row g-2 align-items-end mb-3">
+          <div class="col-md-2">
+            <label class="form-label">Tháng</label>
+            <input type="month" class="form-control" id="fMonth">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Xem theo mã</label>
+            <select class="form-select" id="fViewCode">
+              <option value="ALL">Tất cả</option>
+              <option value="SANXUAT">Sản xuất (SX)</option>
+              <option value="SCL">SCL (tổng)</option>
+              <option value="DTXD">ĐTXD (tổng)</option>
+              <option value="CT">CT (tổng)</option>
+              <optgroup label="— Mã cụ thể —" id="optCodes"></optgroup>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <button class="btn btn-primary w-100" onclick="loadMonth()">🔍 Xem</button>
+          </div>
+          <div class="col-md-3">
+            <button class="btn btn-success w-100" onclick="exportMonth()">📊 Xuất Excel</button>
           </div>
         </div>
 
-        <!-- Chế độ xem -->
-        <div class="d-flex gap-3 mb-2">
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="viewMode" id="vmDay" value="day" checked onchange="renderTable()">
-            <label class="form-check-label" for="vmDay">📋 Chi tiết theo ngày</label>
-          </div>
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="viewMode" id="vmStaff" value="staff" onchange="renderTable()">
-            <label class="form-check-label" for="vmStaff">📊 Tổng hợp theo nhân viên</label>
-          </div>
-        </div>
-
-        <!-- Cảnh báo -->
-        <div id="warningBox"></div>
-
-        <!-- Bảng -->
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <h6 class="fw-bold mb-0" id="tableTitle">Kết quả</h6>
-          <div>
-            <button class="btn btn-success btn-sm" onclick="exportToExcelClient()">📊 Xuất Excel (nhanh)</button>
-            <button class="btn btn-outline-success btn-sm" onclick="exportFromServer()">📥 Xuất Excel (đầy đủ 3 sheet)</button>
-          </div>
-        </div>
+        <div id="warnBox"></div>
 
         <div class="table-responsive">
-          <table class="table table-bordered table-sm table-hover align-middle" id="thongkeTable">
-            <thead class="table-dark">
-              <tr id="tableHead">
-                <!-- Render bằng JS -->
-              </tr>
-            </thead>
-            <tbody id="tableBody">
-              <tr><td class="text-center text-muted">Nhấn "Xem" để tải dữ liệu</td></tr>
+          <table class="table table-bordered table-sm mb-0" id="monthTable">
+            <thead class="table-dark" id="monthHead"></thead>
+            <tbody id="monthBody">
+              <tr><td class="text-center text-muted">Chọn tháng và bấm "Xem"</td></tr>
             </tbody>
           </table>
+        </div>
+
+        <div class="mt-2 small text-muted">
+          <b>Chú thích cell:</b> <code>SX3h</code> = 3 giờ sản xuất | <code>SCL7h</code> = 7 giờ SCL |
+          <code>P</code> = nghỉ phép | <code>H</code> = đi học | Ô đỏ = vượt dự toán
         </div>
       </div>
     </div>
 
-    <!-- ============ TAB 3: CẤU HÌNH ============ -->
+    <!-- ==================== TAB CẤU HÌNH ==================== -->
     <div class="tab-pane fade" id="caidat">
       <div class="card p-4">
         <h5 class="fw-bold">📅 Ngày lễ Tết</h5>
-        <p class="text-muted mb-2">Những ngày này sẽ được tính hệ số Lễ (ngày×3, đêm×3.5).</p>
         <div id="holidayList" class="mb-3"></div>
-        <div class="row g-2 align-items-end">
-          <div class="col-md-4">
-            <label class="form-label">Ngày lễ mới:</label>
-            <input type="date" class="form-control" id="newHolidayDate">
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Tên lễ:</label>
-            <input class="form-control" id="newHolidayName" placeholder="VD: Quốc khánh 2/9">
-          </div>
-          <div class="col-md-2">
-            <button class="btn btn-primary w-100" onclick="addHoliday()">➕ Thêm</button>
-          </div>
+        <div class="row g-2">
+          <div class="col-md-4"><input type="date" class="form-control" id="newHolDate"></div>
+          <div class="col-md-5"><input class="form-control" id="newHolName" placeholder="Tên lễ"></div>
+          <div class="col-md-3"><button class="btn btn-primary w-100" onclick="addHoliday()">➕ Thêm</button></div>
         </div>
       </div>
     </div>
@@ -267,542 +276,304 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <script>
-/* ==========================================================
-   CẤU HÌNH
-   ========================================================== */
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxeQrd6TVvdOogxzWUX5_XYHyvwSR4YeEq8-khAaK-_z4EMBEdXL2SifpDxJRMLC1Lt/exec";
+const API = "DAN_URL_WEB_APP_MOI_VAO_DAY";
+const LEAVE_TYPES = ['P','H','NGHIBU','DIEUDUONG','THAISAN','OM','KHAC'];
 
-const LEAVE_TYPES = ['P','H','NGHIBU','DIEUDUONG','THAISAN','OM'];
-const LABEL_MAP = {
-  SANXUAT:'Sản xuất', SCL:'SCL', DTXD:'ĐTXD', CT:'CT',
-  H:'H', P:'P', NGHIBU:'Nghỉ bù', DIEUDUONG:'Điều dưỡng',
-  THAISAN:'Thai sản', OM:'Ốm', KHAC:'Khác'
-};
+let CONFIG = { staff:[], stations:[], holidays:[], codes:[] };
 
-let CONFIG = { staff: [], stations: [], holidays: [], codes: [] };
-let nhanVienChoices, fNhanVienChoices, fLoaiChoices, fMaCTChoices;
-let cachedData = [];
-
-/* ==========================================================
-   KHỞI TẠO
-   ========================================================== */
+/* ===== KHỞI TẠO ===== */
 window.addEventListener('DOMContentLoaded', () => {
-  const today = new Date().toISOString().slice(0,10);
-  document.getElementById('ngayLamViec').value = today;
-  document.getElementById('fFrom').value = today.slice(0,8) + '01';
-  document.getElementById('fTo').value = today;
-
-  nhanVienChoices = new Choices('#nhanVienSelect', {
-    removeItemButton: true, placeholder: true,
-    placeholderValue: 'Tìm hoặc chọn tên...', searchResultLimit: 30
-  });
-  fNhanVienChoices = new Choices('#fNhanVien', {
-    removeItemButton: true, placeholder: true,
-    placeholderValue: 'Tất cả nhân viên...', searchResultLimit: 30
-  });
-  fLoaiChoices = new Choices('#fLoaiCT', {
-    removeItemButton: true, placeholder: true,
-    placeholderValue: 'Tất cả loại...', searchResultLimit: 30
-  });
-  fMaCTChoices = new Choices('#fMaCT', {
-    removeItemButton: true, placeholder: true,
-    placeholderValue: 'Tất cả mã...', searchResultLimit: 30
-  });
-
+  document.getElementById('fMonth').value = new Date().toISOString().slice(0,7);
   loadConfig();
-  bindFormBehavior();
-  renderTableHead('day');
+  bindForm();
 });
 
-/* ==========================================================
-   LOAD CONFIG (nhân viên, trạm, ngày lễ, mã CT)
-   ========================================================== */
 function loadConfig() {
-  fetch(WEB_APP_URL + '?action=getConfig')
-    .then(r => r.json())
-    .then(cfg => {
-      CONFIG = cfg;
-      renderStaffSelect(cfg.staff || []);
-      renderStationSelect(cfg.stations || []);
-      renderHolidayList(cfg.holidays || []);
-      renderCodeSelect(cfg.codes || []);
-    })
-    .catch(err => {
-      console.warn('Fallback config:', err);
-      const fallbackStaff = Array.from({length:24}, (_,i) => ({ id: 'NV'+String(i+1).padStart(2,'0'), name: 'Nhân viên '+(i+1) }));
-      const fallbackStation = [
-        'TBA 500kV Di Linh','TBA 220kV Bảo Lộc','TBA 220kV Đức Trọng','TBA 220kV Phan Thiết',
-        'TBA 220kV Hàm Tân','TBA 220kV Vĩnh Hảo','TBA 500kV Vĩnh Tân','TBA 500kV Đắk Nông',
-        'TBA 500kV Thuận Nam','TBA 220kV Đắk Nông','TBA 220kV Tháp Chàm','TBA 220kV Phan Rí',
-        'Kho Đất Nông','Kho Lâm Đồng','Kho Di Linh'
-      ];
-      renderStaffSelect(fallbackStaff);
-      renderStationSelect(fallbackStation);
+  fetch(API + '?action=getConfig').then(r=>r.json()).then(cfg => {
+    CONFIG = cfg;
+    renderEmpGrid(cfg.staff);
+    renderStations(cfg.stations);
+    renderCodes(cfg.codes);
+    renderHolidays(cfg.holidays);
+  }).catch(err => alert('Lỗi tải cấu hình: ' + err.message));
+}
+
+function renderEmpGrid(staff) {
+  const grid = document.getElementById('empGrid');
+  grid.innerHTML = staff.map(s => {
+    const shortName = s.short || s.name.split(' ').pop();
+    return `<label class="emp-chip" data-id="${s.id}">
+      <input type="checkbox" value="${s.id}">
+      <span>${shortName}</span>
+    </label>`;
+  }).join('');
+  grid.querySelectorAll('.emp-chip input').forEach(cb => {
+    cb.addEventListener('change', e => {
+      e.target.closest('.emp-chip').classList.toggle('checked', e.target.checked);
+      updateSelectedCount();
     });
+  });
 }
 
-function renderStaffSelect(staff) {
-  nhanVienChoices.clearChoices();
-  nhanVienChoices.setChoices(
-    staff.map(s => ({ value: s.id, label: s.id + ' - ' + s.name })), 'value','label', true);
-  fNhanVienChoices.clearChoices();
-  fNhanVienChoices.setChoices(
-    staff.map(s => ({ value: s.id, label: s.id + ' - ' + s.name })), 'value','label', true);
-}
-
-function renderStationSelect(stations) {
+function renderStations(stations) {
   const sel = document.getElementById('tram');
-  sel.innerHTML = '<option value="">-- Chọn trạm --</option>' +
-    stations.map(s => `<option value="${s}">${s}</option>`).join('');
+  sel.innerHTML = '<option value="">— Chọn trạm —</option>' +
+    stations.map(s => `<option>${s}</option>`).join('');
 }
 
-function renderCodeSelect(codes) {
-  fMaCTChoices.clearChoices();
-  fMaCTChoices.setChoices(
-    codes.map(c => ({ value: c, label: c })), 'value','label', true);
+function renderCodes(codes) {
+  document.getElementById('maList').innerHTML =
+    codes.map(c => `<option value="${c}">`).join('');
+  const optGroup = document.getElementById('optCodes');
+  optGroup.innerHTML = codes.map(c => `<option value="${c}">${c}</option>`).join('');
 }
 
-function renderHolidayList(holidays) {
+function renderHolidays(hs) {
   const box = document.getElementById('holidayList');
-  if (!holidays || !holidays.length) {
-    box.innerHTML = '<p class="text-muted">Chưa có ngày lễ nào.</p>'; return;
-  }
-  box.innerHTML = '<table class="table table-sm table-bordered"><thead class="table-light"><tr><th>Ngày</th><th>Tên</th><th style="width:80px"></th></tr></thead><tbody>' +
-    holidays.map(h => `<tr><td>${h.date}</td><td>${h.name}</td>
-      <td><button class="btn btn-sm btn-danger" onclick="deleteHoliday('${h.date}')">Xóa</button></td></tr>`).join('') +
+  if (!hs || !hs.length) { box.innerHTML = '<p class="text-muted">Chưa có</p>'; return; }
+  box.innerHTML = '<table class="table table-sm table-bordered"><thead><tr><th>Ngày</th><th>Tên</th><th></th></tr></thead><tbody>' +
+    hs.map(h => `<tr><td>${h.date}</td><td>${h.name}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="delHoliday('${h.date}')">Xóa</button></td></tr>`).join('') +
     '</tbody></table>';
 }
 
-/* ==========================================================
-   FORM BEHAVIOR
-   ========================================================== */
-function bindFormBehavior() {
-  document.getElementById('loaiCongTac').addEventListener('change', updateVisibility);
-  document.getElementById('tram').addEventListener('change', checkBaoLoc);
-  updateVisibility();
+function toggleAll(v) {
+  document.querySelectorAll('#empGrid input').forEach(cb => {
+    cb.checked = v; cb.closest('.emp-chip').classList.toggle('checked', v);
+  });
+  updateSelectedCount();
+}
+function updateSelectedCount() {
+  document.getElementById('cntSelected').textContent =
+    document.querySelectorAll('#empGrid input:checked').length;
 }
 
-function updateVisibility() {
-  const loai = document.getElementById('loaiCongTac').value;
+/* ===== FORM BEHAVIOR ===== */
+function bindForm() {
+  document.getElementById('loaiCT').addEventListener('change', onLoaiChange);
+  document.getElementById('tram').addEventListener('change', checkBaoLoc);
+  document.getElementById('leaveFrom').addEventListener('change', autoHours);
+  document.getElementById('leaveTo').addEventListener('change', autoHours);
+
+  // Set default datetime = bây giờ
+  const now = new Date();
+  now.setMinutes(0,0,0);
+  const iso = now.toISOString().slice(0,16);
+  ['dcDiTu','dcDiDen','gIoBD','gIoKT','dcVeTu','dcVeDen'].forEach(id => {
+    document.getElementById(id).value = iso;
+  });
+
+  document.getElementById('frm').addEventListener('submit', onSubmit);
+  onLoaiChange();
+}
+
+function onLoaiChange() {
+  const loai = document.getElementById('loaiCT').value;
   const isLeave = LEAVE_TYPES.includes(loai);
-  document.getElementById('groupGio').style.display = isLeave ? 'none' : '';
-  document.getElementById('groupDiChuyen').style.display = isLeave ? 'none' : '';
-  document.getElementById('groupTram').style.display = isLeave ? 'none' : '';
-  document.getElementById('groupMaCT').style.display =
-    ['SCL','DTXD','CT'].includes(loai) ? '' : 'none';
-  document.getElementById('groupHangMuc').style.display =
-    ['SCL','DTXD'].includes(loai) ? '' : 'none';
+  document.getElementById('sectionWork').classList.toggle('d-none', isLeave);
+  document.getElementById('sectionLeave').classList.toggle('d-none', !isLeave);
+  document.getElementById('groupTram').classList.toggle('d-none', isLeave);
+  document.getElementById('groupMa').classList.toggle('d-none', isLeave || loai === 'CT');
+  document.getElementById('groupHangMuc').classList.toggle('d-none', isLeave || !['SCL','DTXD'].includes(loai));
+  document.getElementById('groupNghiBu').classList.toggle('d-none', loai !== 'NGHIBU');
+  autoHours();
+}
+
+function autoHours() {
+  if (document.getElementById('loaiCT').value !== 'NGHIBU') return;
+  const from = document.getElementById('leaveFrom').value;
+  const to = document.getElementById('leaveTo').value;
+  if (from && to) {
+    const days = Math.round((new Date(to) - new Date(from)) / 86400000) + 1;
+    document.getElementById('leaveHours').value = (days * 8).toFixed(1);
+  }
 }
 
 function checkBaoLoc() {
-  const tram = document.getElementById('tram').value;
+  const t = document.getElementById('tram').value;
   const hint = document.getElementById('baoLocHint');
-  const ctSel = document.getElementById('ctType');
-  if (tram.includes('Bảo Lộc')) {
-    hint.style.display = ''; ctSel.value = ''; ctSel.disabled = true;
-  } else {
-    hint.style.display = 'none'; ctSel.disabled = false;
-  }
+  const ct = document.getElementById('ctType');
+  if (t.includes('Bảo Lộc')) { hint.classList.remove('d-none'); ct.value=''; ct.disabled=true; }
+  else { hint.classList.add('d-none'); ct.disabled=false; }
 }
 
 function resetForm() {
-  document.getElementById('timeForm').reset();
-  document.getElementById('ngayLamViec').value = new Date().toISOString().slice(0,10);
-  document.getElementById('batDau').value = '07:00';
-  document.getElementById('ketThuc').value = '17:00';
-  nhanVienChoices.removeActiveItems();
-  updateVisibility();
-  document.getElementById('statusMsg').textContent = '';
+  document.getElementById('frm').reset();
+  toggleAll(false);
+  document.getElementById('msg').innerHTML = '';
+  onLoaiChange();
 }
 
-/* ==========================================================
-   SUBMIT
-   ========================================================== */
-document.getElementById('timeForm').addEventListener('submit', function(e) {
+/* ===== SUBMIT ===== */
+function onSubmit(e) {
   e.preventDefault();
-  const dsNV = nhanVienChoices.getValue(true);
-  if (!dsNV.length) { alert('Chọn ít nhất 1 nhân sự!'); return; }
+  const dsNV = Array.from(document.querySelectorAll('#empGrid input:checked')).map(c => c.value);
+  if (!dsNV.length) { alert('Chọn ít nhất 1 nhân sự'); return; }
 
-  const loai = document.getElementById('loaiCongTac').value;
+  const loai = document.getElementById('loaiCT').value;
   const isLeave = LEAVE_TYPES.includes(loai);
 
-  const payload = {
+  const p = {
     action: 'addEntry',
-    dsNhanVien: dsNV,
-    ngay: document.getElementById('ngayLamViec').value,
-    loaiCT: loai,
+    dsNV, loaiCT: loai,
     maCT: document.getElementById('maCT').value.trim(),
     hangMuc: document.getElementById('hangMuc').value.trim(),
-    tram: isLeave ? '' : document.getElementById('tram').value,
-    ctType: isLeave ? '' : document.getElementById('ctType').value,
-    batDau: isLeave ? '' : document.getElementById('batDau').value,
-    ketThuc: isLeave ? '' : document.getElementById('ketThuc').value,
-    dcDiTu: isLeave ? '' : document.getElementById('dcDiTu').value,
-    dcDiDen: isLeave ? '' : document.getElementById('dcDiDen').value,
-    dcVeTu: isLeave ? '' : document.getElementById('dcVeTu').value,
-    dcVeDen: isLeave ? '' : document.getElementById('dcVeDen').value,
     ghiChu: document.getElementById('ghiChu').value.trim()
   };
 
-  if (!payload.ngay) { alert('Chọn ngày công tác!'); return; }
-  if (!isLeave) {
-    if (!payload.batDau || !payload.ketThuc) { alert('Nhập giờ bắt đầu/kết thúc!'); return; }
-    if (!payload.tram) { alert('Chọn trạm!'); return; }
-    // Cảnh báo thời lượng bất thường
-    const mins = diffMinutes(payload.batDau, payload.ketThuc);
-    if (mins < 30) { if(!confirm('Thời lượng < 30 phút. Tiếp tục?')) return; }
-    if (mins > 20*60) { if(!confirm('Thời lượng > 20 giờ. Tiếp tục?')) return; }
+  if (isLeave) {
+    p.leaveFrom = document.getElementById('leaveFrom').value;
+    p.leaveTo = document.getElementById('leaveTo').value;
+    if (loai === 'NGHIBU') p.leaveHours = parseFloat(document.getElementById('leaveHours').value) || 0;
+    if (!p.leaveFrom || !p.leaveTo) { alert('Chọn khoảng ngày'); return; }
+    if (p.leaveFrom > p.leaveTo) { alert('Từ ngày phải ≤ đến ngày'); return; }
+  } else {
+    p.tram = document.getElementById('tram').value;
+    p.ctType = document.getElementById('ctType').value;
+    p.dcDiTu = document.getElementById('dcDiTu').value;
+    p.dcDiDen = document.getElementById('dcDiDen').value;
+    p.gioBD  = document.getElementById('gIoBD').value;
+    p.gioKT  = document.getElementById('gIoKT').value;
+    p.dcVeTu = document.getElementById('dcVeTu').value;
+    p.dcVeDen= document.getElementById('dcVeDen').value;
+    if (!p.tram) { alert('Chọn trạm'); return; }
+    if (!p.gioBD || !p.gioKT) { alert('Nhập giờ công tác'); return; }
+    if (new Date(p.gioKT) <= new Date(p.gioBD)) {
+      alert('Giờ kết thúc phải sau giờ bắt đầu. Nếu làm qua đêm, chọn ngày hôm sau.');
+      return;
+    }
   }
 
-  const btn = document.getElementById('btnSubmit');
+  const btn = document.getElementById('btnSave');
   btn.disabled = true; btn.textContent = '⏳ Đang lưu...';
 
-  fetch(WEB_APP_URL, {
+  fetch(API, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(p)
   })
-  .then(r => r.json())
-  .then(data => {
-    if (data.error) throw new Error(data.error);
-    document.getElementById('statusMsg').innerHTML =
-      '<span class="text-success fw-bold">✅ ' + (data.message || 'Đã lưu') +
-      ' — ' + dsNV.length + ' dòng</span>';
+  .then(r => r.json()).then(d => {
+    if (d.error) throw new Error(d.error);
+    document.getElementById('msg').innerHTML =
+      `<span class="text-success fw-bold">✅ ${d.message}</span>`;
     resetForm();
   })
-  .catch(err => { alert('Lỗi: ' + err.message); })
-  .finally(() => { btn.disabled = false; btn.textContent = '💾 Lưu Dữ Liệu'; });
-});
-
-function diffMinutes(t1, t2) {
-  const [h1,m1] = t1.split(':').map(Number);
-  const [h2,m2] = t2.split(':').map(Number);
-  let a = h1*60+m1, b = h2*60+m2;
-  if (b <= a) b += 1440;
-  return b - a;
+  .catch(err => alert('Lỗi: ' + err.message))
+  .finally(() => { btn.disabled = false; btn.textContent = '💾 Lưu'; });
 }
 
-/* ==========================================================
-   TAB THỐNG KÊ
-   ========================================================== */
-function onTabThongKe() { loadData(); }
+/* ===== BẢNG THÁNG ===== */
+let cachedMonth = null;
 
-function loadData() {
-  const from = document.getElementById('fFrom').value;
-  const to = document.getElementById('fTo').value;
-  if (!from || !to) { alert('Chọn khoảng ngày!'); return; }
-  if (from > to) { alert('Từ ngày phải ≤ Đến ngày!'); return; }
+function loadMonth() {
+  const m = document.getElementById('fMonth').value;
+  if (!m) { alert('Chọn tháng'); return; }
+  const [year, month] = m.split('-').map(Number);
+  const viewCode = document.getElementById('fViewCode').value;
 
-  const types = fLoaiChoices.getValue(true);
-  const staffIds = fNhanVienChoices.getValue(true);
-  const codes = fMaCTChoices.getValue(true);
+  document.getElementById('monthBody').innerHTML =
+    '<tr><td class="text-center text-primary">⏳ Đang tải...</td></tr>';
 
-  document.getElementById('tableBody').innerHTML =
-    '<tr><td colspan="30" class="text-center text-primary">⏳ Đang tải...</td></tr>';
-
-  const params = new URLSearchParams({
-    action: 'getData',
-    from, to,
-    types: types.join(','),
-    staffIds: staffIds.join(','),
-    codes: codes.join(',')
+  const params = new URLSearchParams({ action:'getMonthData', year, month, viewCode });
+  fetch(API + '?' + params).then(r => r.json()).then(data => {
+    if (data.error) throw new Error(data.error);
+    cachedMonth = data;
+    renderMonth(data);
+    renderWarn(data);
+  }).catch(err => {
+    document.getElementById('monthBody').innerHTML =
+      `<tr><td class="text-danger text-center">Lỗi: ${err.message}</td></tr>`;
   });
-
-  fetch(WEB_APP_URL + '?' + params.toString())
-    .then(r => r.json())
-    .then(data => {
-      if (data.error) throw new Error(data.error);
-      cachedData = data.rows || [];
-      renderTable();
-      renderWarnings();
-    })
-    .catch(err => {
-      document.getElementById('tableBody').innerHTML =
-        '<tr><td colspan="30" class="text-danger text-center">Lỗi: ' + err.message + '</td></tr>';
-    });
 }
 
-/* -------- Đầu bảng theo chế độ xem -------- */
-function renderTableHead(mode) {
-  const head = document.getElementById('tableHead');
-  if (mode === 'staff') {
-    head.innerHTML = `
-      <th>Mã NV</th><th>Tên NV</th>
-      <th>Số ngày</th>
-      <th>HC</th><th>OT ngày</th><th>OT đêm</th>
-      <th>CT ngày</th><th>CT đêm</th><th>Lễ ngày</th><th>Lễ đêm</th>
-      <th>Tổng giờ</th><th>Tổng hệ số</th>
-      <th>CT1</th><th>CT2</th><th>Di chuyển</th>
-      <th>Giờ SCL</th><th>Công SCL</th>
-      <th>Giờ ĐTXD</th><th>Công ĐTXD</th>
-      <th>Nghỉ phép</th><th>Đi học</th><th>Chi tiết</th><th>Ghi chú</th>`;
-  } else {
-    head.innerHTML = `
-      <th>Mã NV</th><th>Tên NV</th><th>Ngày</th>
-      <th>HC</th><th>OT ngày</th><th>OT đêm</th>
-      <th>CT ngày</th><th>CT đêm</th><th>Lễ ngày</th><th>Lễ đêm</th>
-      <th>Tổng giờ</th><th>Tổng hệ số</th>
-      <th>CT1</th><th>CT2</th><th>Di chuyển</th>
-      <th>Giờ SCL</th><th>Công SCL</th>
-      <th>Giờ ĐTXD</th><th>Công ĐTXD</th>
-      <th>Trạng thái</th><th>Chi tiết</th><th>Ghi chú</th>`;
+function renderMonth(data) {
+  const head = document.getElementById('monthHead');
+  const body = document.getElementById('monthBody');
+  const { year, month, days, holidays, staffRows } = data;
+
+  // Header: Mã | Tên | 1 | 2 | ... | 31 | Tổng ngày | Tổng đêm | Tổng hệ số | CT1 | CT2 | DC
+  let h = '<tr><th style="min-width:50px">Mã</th><th style="min-width:80px">Tên</th>';
+  for (let d = 1; d <= days; d++) {
+    const dt = new Date(year, month-1, d);
+    const dow = dt.getDay();
+    const iso = dt.toISOString().slice(0,10);
+    let cls = 'col-day';
+    let label = d;
+    if (holidays.includes(iso)) { cls += ' cell-le'; label = d + '🎉'; }
+    else if (dow === 0) { cls += ' cell-cn'; label = d + ' CN'; }
+    else if (dow === 6) { cls += ' cell-t7'; label = d + ' T7'; }
+    h += `<th class="${cls}">${label}</th>`;
   }
-}
+  h += '<th class="total-col">Tổng ngày</th>' +
+       '<th class="total-col">Tổng đêm</th>' +
+       '<th class="total-col">Tổng HS</th>' +
+       '<th class="total-col">CT1</th>' +
+       '<th class="total-col">CT2</th>' +
+       '<th class="total-col">DC</th>';
+  head.innerHTML = h;
 
-function renderTable() {
-  const mode = document.querySelector('input[name="viewMode"]:checked').value;
-  renderTableHead(mode);
-
-  const tbody = document.getElementById('tableBody');
-  if (!cachedData.length) {
-    tbody.innerHTML = '<tr><td colspan="30" class="text-center">Không có dữ liệu</td></tr>';
-    document.getElementById('tableTitle').textContent = 'Kết quả: 0 dòng';
-    return;
-  }
-
-  if (mode === 'staff') {
-    renderAggregate(tbody);
-  } else {
-    renderDetail(tbody);
-  }
-}
-
-/* -------- Chi tiết theo ngày -------- */
-function renderDetail(tbody) {
-  document.getElementById('tableTitle').textContent = 'Kết quả: ' + cachedData.length + ' dòng';
-  tbody.innerHTML = cachedData.map(r => {
-    const ot = (r.OT_DAY||0)+(r.OT_NIGHT||0)+(r.WE_DAY||0)+(r.WE_NIGHT||0)+(r.HOL_DAY||0)+(r.HOL_NIGHT||0);
-    const cls = ot > 4 ? 'warn-row' : '';
-    const detailStr = formatDetail(r.details);
-    return `<tr class="${cls}">
-      <td>${r.staffId}</td>
-      <td class="fw-bold">${r.staffName}</td>
-      <td>${r.date}</td>
-      <td class="cell-hc">${num(r.HC)}</td>
-      <td class="cell-ot">${num(r.OT_DAY)}</td>
-      <td class="cell-night">${num(r.OT_NIGHT)}</td>
-      <td class="cell-weekend">${num(r.WE_DAY)}</td>
-      <td class="cell-weekend">${num(r.WE_NIGHT)}</td>
-      <td class="cell-holiday">${num(r.HOL_DAY)}</td>
-      <td class="cell-holiday">${num(r.HOL_NIGHT)}</td>
-      <td class="fw-bold">${num(r.totalH)}</td>
-      <td class="fw-bold text-success">${num(r.totalCoef)}</td>
-      <td>${r.ct1||''}</td>
-      <td>${r.ct2||''}</td>
-      <td>${num(r.travel)}</td>
-      <td>${num(r.gioSCL)}</td>
-      <td class="fw-bold text-primary">${r.congSCL||''}</td>
-      <td>${num(r.gioDTXD)}</td>
-      <td class="fw-bold text-primary">${r.congDTXD||''}</td>
-      <td>${r.leaveType ? '<span class="badge bg-secondary">'+r.leaveType+'</span>' : ''}</td>
-      <td style="font-size:11px">${detailStr}</td>
-      <td style="font-size:11px">${r.notes||''}</td>
-    </tr>`;
+  // Body
+  body.innerHTML = staffRows.map(r => {
+    let tr = `<tr><td>${r.staffId}</td><td class="fw-bold">${r.shortName}</td>`;
+    for (let d = 1; d <= days; d++) {
+      const cell = r.cells[d] || '';
+      const overBudget = r.overBudget && r.overBudget[d];
+      const cls = (cell && (cell.includes('P') || cell.includes('H'))) ? 'cell-leave' : (cell ? 'cell-work' : '');
+      const warnCls = overBudget ? 'cell-warn' : '';
+      tr += `<td class="${cls} ${warnCls}">${cell}</td>`;
+    }
+    tr += `<td class="total-col">${r.totalDay.toFixed(1)}h</td>` +
+          `<td class="total-col">${r.totalNight.toFixed(1)}h</td>` +
+          `<td class="total-col">${r.totalCoef.toFixed(2)}</td>` +
+          `<td class="total-col">${r.ct1||''}</td>` +
+          `<td class="total-col">${r.ct2||''}</td>` +
+          `<td class="total-col">${r.travel.toFixed(1)}h</td></tr>`;
+    return tr;
   }).join('');
 }
 
-/* -------- Tổng hợp theo nhân viên -------- */
-function renderAggregate(tbody) {
-  const agg = {};
-  cachedData.forEach(r => {
-    if (!agg[r.staffId]) agg[r.staffId] = {
-      staffId: r.staffId, staffName: r.staffName,
-      days: 0, HC:0, OT_DAY:0, OT_NIGHT:0, WE_DAY:0, WE_NIGHT:0, HOL_DAY:0, HOL_NIGHT:0,
-      totalH:0, totalCoef:0, ct1:0, ct2:0, travel:0,
-      gioSCL:0, congSCL:0, gioDTXD:0, congDTXD:0,
-      P:0, H:0, NGHIBU:0, DIEUDUONG:0, THAISAN:0, OM:0, KHAC:0,
-      details: {}, notes: []
-    };
-    const o = agg[r.staffId];
-    o.days++;
-    ['HC','OT_DAY','OT_NIGHT','WE_DAY','WE_NIGHT','HOL_DAY','HOL_NIGHT','totalH','totalCoef','travel','gioSCL','gioDTXD']
-      .forEach(k => o[k] += (r[k] || 0));
-    o.ct1 += (r.ct1||0); o.ct2 += (r.ct2||0);
-    o.congSCL += (r.congSCL||0); o.congDTXD += (r.congDTXD||0);
-    ['P','H','NGHIBU','DIEUDUONG','THAISAN','OM','KHAC'].forEach(k => o[k] += (r.leaveType===k?1:0));
-    Object.keys(r.details||{}).forEach(k => { o.details[k] = (o.details[k]||0) + r.details[k]; });
-    if (r.notes) o.notes.push(r.notes);
-  });
-
-  const rows = Object.values(agg).sort((a,b) => a.staffId.localeCompare(b.staffId));
-  document.getElementById('tableTitle').textContent = 'Tổng hợp: ' + rows.length + ' nhân viên';
-
-  tbody.innerHTML = rows.map(o => {
-    const ot = o.OT_DAY+o.OT_NIGHT+o.WE_DAY+o.WE_NIGHT+o.HOL_DAY+o.HOL_NIGHT;
-    const cls = ot > 40 ? 'warn-row' : '';
-    return `<tr class="${cls}">
-      <td>${o.staffId}</td>
-      <td class="fw-bold">${o.staffName}</td>
-      <td>${o.days}</td>
-      <td class="cell-hc">${num(o.HC)}</td>
-      <td class="cell-ot">${num(o.OT_DAY)}</td>
-      <td class="cell-night">${num(o.OT_NIGHT)}</td>
-      <td class="cell-weekend">${num(o.WE_DAY)}</td>
-      <td class="cell-weekend">${num(o.WE_NIGHT)}</td>
-      <td class="cell-holiday">${num(o.HOL_DAY)}</td>
-      <td class="cell-holiday">${num(o.HOL_NIGHT)}</td>
-      <td class="fw-bold">${num(o.totalH)}</td>
-      <td class="fw-bold text-success">${num(o.totalCoef)}</td>
-      <td>${o.ct1||''}</td>
-      <td>${o.ct2||''}</td>
-      <td>${num(o.travel)}</td>
-      <td>${num(o.gioSCL)}</td>
-      <td class="fw-bold text-primary">${o.congSCL||''}</td>
-      <td>${num(o.gioDTXD)}</td>
-      <td class="fw-bold text-primary">${o.congDTXD||''}</td>
-      <td>${o.P?o.P+'P ':''}${o.DIEUDUONG?o.DIEUDUONG+'ĐD ':''}${o.THAISAN?o.THAISAN+'TS ':''}${o.OM?o.OM+'Ố ':''}${o.NGHIBU?o.NGHIBU+'NB ':''}</td>
-      <td>${o.H?o.H+'H':''}</td>
-      <td style="font-size:11px">${formatDetail(o.details)}</td>
-      <td style="font-size:11px">${o.notes.join('; ')}</td>
-    </tr>`;
-  }).join('');
+function renderWarn(data) {
+  const box = document.getElementById('warnBox');
+  const warns = data.warnings || [];
+  if (!warns.length) { box.innerHTML = ''; return; }
+  box.innerHTML = `<div class="alert alert-warning py-2 mb-2">
+    <b>⚠️ ${warns.length} cảnh báo:</b> ` +
+    warns.slice(0,5).map(w => w.text).join(' | ') +
+    (warns.length > 5 ? ` ... +${warns.length-5}` : '') +
+    '</div>';
 }
 
-/* -------- Cảnh báo -------- */
-function renderWarnings() {
-  const box = document.getElementById('warningBox');
-  const warnDay = cachedData.filter(r => {
-    const ot = (r.OT_DAY||0)+(r.OT_NIGHT||0)+(r.WE_DAY||0)+(r.WE_NIGHT||0)+(r.HOL_DAY||0)+(r.HOL_NIGHT||0);
-    return ot > 4;
+function exportMonth() {
+  if (!cachedMonth) { alert('Chưa tải dữ liệu'); return; }
+  // Đơn giản: xuất bảng hiện tại
+  const m = document.getElementById('fMonth').value;
+  const rows = [];
+  const head = [['Mã NV','Tên','Tổng ngày','Tổng đêm','Tổng HS','CT1','CT2','DC']];
+  cachedMonth.staffRows.forEach(r => {
+    head.push([r.staffId, r.shortName,
+      r.totalDay.toFixed(1), r.totalNight.toFixed(1), r.totalCoef.toFixed(2),
+      r.ct1||'', r.ct2||'', r.travel.toFixed(1)]);
   });
-  const agg = {};
-  cachedData.forEach(r => {
-    const ot = (r.OT_DAY||0)+(r.OT_NIGHT||0)+(r.WE_DAY||0)+(r.WE_NIGHT||0)+(r.HOL_DAY||0)+(r.HOL_NIGHT||0);
-    agg[r.staffId] = (agg[r.staffId]||0) + ot;
-  });
-  const warnTotal = Object.keys(agg).filter(k => agg[k] > 40);
-
-  let html = '';
-  if (warnDay.length) {
-    html += `<div class="alert alert-warning py-2 mb-2">
-      <b>⚠️ ${warnDay.length} ngày có OT &gt; 4h:</b> ` +
-      warnDay.slice(0,5).map(r => `${r.staffName} (${r.date})`).join(', ') +
-      (warnDay.length>5 ? ` ... +${warnDay.length-5}` : '') + '</div>';
-  }
-  if (warnTotal.length) {
-    html += `<div class="alert alert-danger py-2 mb-2">
-      <b>🚨 ${warnTotal.length} NV có tổng OT &gt; 40h/kỳ:</b> ` +
-      warnTotal.map(k => {
-        const name = (cachedData.find(r => r.staffId === k) || {}).staffName || k;
-        return `${name} (${agg[k].toFixed(1)}h)`;
-      }).join(', ') + '</div>';
-  }
-  box.innerHTML = html;
-}
-
-/* -------- Utils -------- */
-function num(x) { return (x==null||x==='')?'':(Math.round(x*100)/100); }
-function formatDetail(details) {
-  if (!details) return '';
-  return Object.keys(details).filter(k => details[k] > 0)
-    .map(k => k + '=' + num(details[k]) + 'h').join(' | ');
-}
-
-/* ==========================================================
-   XUẤT EXCEL
-   ========================================================== */
-function exportToExcelClient() {
-  if (!cachedData.length) { alert('Chưa có dữ liệu!'); return; }
-  const mode = document.querySelector('input[name="viewMode"]:checked').value;
-
-  let data;
-  if (mode === 'staff') {
-    // Tổng hợp theo NV từ cachedData
-    const agg = {};
-    cachedData.forEach(r => {
-      if (!agg[r.staffId]) agg[r.staffId] = {
-        staffId: r.staffId, staffName: r.staffName,
-        days: 0, HC:0, OT_DAY:0, OT_NIGHT:0, WE_DAY:0, WE_NIGHT:0, HOL_DAY:0, HOL_NIGHT:0,
-        totalH:0, totalCoef:0, ct1:0, ct2:0, travel:0,
-        gioSCL:0, congSCL:0, gioDTXD:0, congDTXD:0, details:{}
-      };
-      const o = agg[r.staffId];
-      o.days++;
-      ['HC','OT_DAY','OT_NIGHT','WE_DAY','WE_NIGHT','HOL_DAY','HOL_NIGHT','totalH','totalCoef','travel','gioSCL','gioDTXD','ct1','ct2','congSCL','congDTXD']
-        .forEach(k => o[k] += (r[k]||0));
-      Object.keys(r.details||{}).forEach(k => o.details[k]=(o.details[k]||0)+r.details[k]);
-    });
-    data = Object.values(agg).map(o => ({
-      'Mã NV': o.staffId, 'Tên NV': o.staffName, 'Số ngày': o.days,
-      'HC': num(o.HC), 'OT ngày': num(o.OT_DAY), 'OT đêm': num(o.OT_NIGHT),
-      'CT ngày': num(o.WE_DAY), 'CT đêm': num(o.WE_NIGHT),
-      'Lễ ngày': num(o.HOL_DAY), 'Lễ đêm': num(o.HOL_NIGHT),
-      'Tổng giờ': num(o.totalH), 'Tổng hệ số': num(o.totalCoef),
-      'CT1': o.ct1, 'CT2': o.ct2, 'Di chuyển': num(o.travel),
-      'Giờ SCL': num(o.gioSCL), 'Công SCL': o.congSCL,
-      'Giờ ĐTXD': num(o.gioDTXD), 'Công ĐTXD': o.congDTXD,
-      'Chi tiết': formatDetail(o.details)
-    }));
-  } else {
-    data = cachedData.map(r => ({
-      'Mã NV': r.staffId, 'Tên NV': r.staffName, 'Ngày': r.date,
-      'HC': num(r.HC), 'OT ngày': num(r.OT_DAY), 'OT đêm': num(r.OT_NIGHT),
-      'CT ngày': num(r.WE_DAY), 'CT đêm': num(r.WE_NIGHT),
-      'Lễ ngày': num(r.HOL_DAY), 'Lễ đêm': num(r.HOL_NIGHT),
-      'Tổng giờ': num(r.totalH), 'Tổng hệ số': num(r.totalCoef),
-      'CT1': r.ct1, 'CT2': r.ct2, 'Di chuyển': num(r.travel),
-      'Giờ SCL': num(r.gioSCL), 'Công SCL': r.congSCL,
-      'Giờ ĐTXD': num(r.gioDTXD), 'Công ĐTXD': r.congDTXD,
-      'Trạng thái': r.leaveType || '',
-      'Chi tiết': formatDetail(r.details),
-      'Ghi chú': r.notes || ''
-    }));
-  }
-
-  const ws = XLSX.utils.json_to_sheet(data);
+  const ws = XLSX.utils.aoa_to_sheet(head);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, mode === 'staff' ? 'TongHopNV' : 'ChiTiet');
-  XLSX.writeFile(wb, 'ThongKe_' + mode + '_' + Date.now() + '.xlsx');
+  XLSX.utils.book_append_sheet(wb, ws, 'TongHopThang');
+  XLSX.writeFile(wb, `ThongKe_${m}.xlsx`);
 }
 
-function exportFromServer() {
-  const from = document.getElementById('fFrom').value;
-  const to = document.getElementById('fTo').value;
-  if (!from || !to) { alert('Chọn khoảng ngày!'); return; }
-
-  const types = fLoaiChoices.getValue(true);
-  const staffIds = fNhanVienChoices.getValue(true);
-  const codes = fMaCTChoices.getValue(true);
-
-  const params = new URLSearchParams({
-    action: 'export', from, to,
-    types: types.join(','), staffIds: staffIds.join(','), codes: codes.join(',')
-  });
-
-  fetch(WEB_APP_URL + '?' + params.toString())
-    .then(r => r.json())
-    .then(d => {
-      if (d.error) { alert('Lỗi: ' + d.error); return; }
-      if (d.url) window.open(d.url, '_blank');
-    })
-    .catch(err => alert('Lỗi xuất: ' + err.message));
-}
-
-/* ==========================================================
-   CẤU HÌNH NGÀY LỄ
-   ========================================================== */
+/* ===== HOLIDAY ===== */
 function addHoliday() {
-  const date = document.getElementById('newHolidayDate').value;
-  const name = document.getElementById('newHolidayName').value.trim();
-  if (!date || !name) { alert('Nhập ngày và tên lễ!'); return; }
-  fetch(WEB_APP_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'addHoliday', date, name })
-  }).then(r => r.json()).then(d => {
-    if (d.error) alert(d.error); else { alert(d.message || 'Đã thêm'); loadConfig(); }
-  });
+  const date = document.getElementById('newHolDate').value;
+  const name = document.getElementById('newHolName').value.trim();
+  if (!date || !name) { alert('Nhập đủ'); return; }
+  fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({action:'addHoliday', date, name})
+  }).then(r=>r.json()).then(d=>{ if(d.error) alert(d.error); else loadConfig(); });
 }
-
-function deleteHoliday(date) {
-  if (!confirm('Xóa ngày lễ ' + date + '?')) return;
-  fetch(WEB_APP_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'deleteHoliday', date })
-  }).then(r => r.json()).then(d => {
-    if (d.error) alert(d.error); else { alert(d.message || 'Đã xóa'); loadConfig(); }
-  });
+function delHoliday(date) {
+  if (!confirm('Xóa ' + date + '?')) return;
+  fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({action:'deleteHoliday', date})
+  }).then(r=>r.json()).then(d=>{ if(d.error) alert(d.error); else loadConfig(); });
 }
 </script>
 </body>
