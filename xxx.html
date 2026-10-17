@@ -1,141 +1,99 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-<base target="_top">
-<style>
-  body { font-family: Arial, sans-serif; padding: 10px; font-size: 13px; }
-  h3 { margin: 8px 0 4px; color: #2c3e50; }
-  label { display:block; margin-top:6px; font-weight:600; }
-  input, select, textarea { width:100%; padding:4px; box-sizing:border-box; margin-top:2px; }
-  .row2 { display:flex; gap:6px; }
-  .row2 > div { flex:1; }
-  button { padding:8px 12px; margin-top:10px; width:100%;
-           background:#1a73e8; color:#fff; border:0; border-radius:4px; cursor:pointer; }
-  button.gray { background:#5f6368; }
-  .box { border:1px solid #ddd; border-radius:4px; padding:8px; margin-bottom:8px; }
-  #msg { color: green; margin-top:6px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhật Ký Công Tác - Tổ Thí Nghiệm</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f7f6; padding: 20px; }
+        .container { max-width: 500px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin: auto; }
+        h2 { text-align: center; color: #333; }
+        label { font-weight: bold; display: block; margin-top: 10px; }
+        input, select, button { width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; font-size: 16px; cursor: pointer; margin-top: 20px; }
+        button:hover { background: #0056b3; }
+        .spinner { display: none; text-align: center; margin-top: 10px; color: #007bff; }
+    </style>
 </head>
 <body>
 
-<div class="box">
-  <h3>➕ Nhập công tác</h3>
-  <label>Ngày (ngày công tác)</label>
-  <input type="date" id="ngay">
-  <div class="row2">
-    <div>
-      <label>Mã NV</label>
-      <select id="manv"></select>
-    </div>
-    <div>
-      <label>Loại CT</label>
-      <select id="loaiCT">
-        <option>SANXUAT</option><option>SCL</option><option>DTXD</option>
-        <option>CT</option><option>H</option><option>P</option>
-        <option>NGHIBU</option><option>DIEUDUONG</option>
-        <option>THAISAN</option><option>OM</option><option>KHAC</option>
-      </select>
-    </div>
-  </div>
-  <div class="row2">
-    <div><label>Mã CT</label><input id="maCT" placeholder="SCL1, GOI2…"></div>
-    <div><label>Hạng mục</label><input id="hangMuc" placeholder="Thay cuộn cắt…"></div>
-  </div>
-  <label>Trạm</label>
-  <ấtselect id="tram"></select>
-  <label>CT1 / CT2</label>
-  <select id="ctType"><option value="">--</option><option>CT1</option><option>CT2</option></select>
+<div class="container">
+    <h2>Nhập Giờ Làm Việc</h2>
+    <form id="timeForm">
+        <label>Nhân viên:</label>
+        <select id="ten" required>
+            <option value="">-- Chọn người --</option>
+            <option value="Nguyễn Văn A">Nguyễn Văn A</option>
+            <!-- Thêm đủ 24 người tại đây -->
+        </select>
 
-  <div class="row2">
-    <div><label>Bắt đầu</label><input type="time" id="gioBD" value="07:00"></div>
-    <div><label>Kết thúc</label><input type="time" id="gioKT" value="17:00"></div>
-  </div>
-  <div class="row2 Excel">
-    <div><label>DC đi từ</label><input type="time" id="dcDiTu"></div>
-    <div><label>DC đi đến</label><input type="time" id="dcDiDen"></div>
-  </div>
-  <div class="row2">
-    <div><label>DC về từ</label><input type="time" id="dcVeTu"></div>
-    <div><label>DC về đến</label><input type="time" id="dcVeDen"></div>
-  </div>
-  <label>Ghi chú</label>
-  <input id="ghiChu">
-  <button onclick="saveEntry()">Lưu công tác</button>
-  <div id="msg"></div>
-</div>
+        <label>Ngày làm việc (Tính từ 6h sáng):</label>
+        <input type="date" id="ngayLamViec" required>
 
-<div class="box">
-  <h3>📤 Xuất Excel</h3>
-  <div class="row2">
-    <div><label>Từ ngày</label><input type="date" id="expFrom"></div>
-    <div><label>Đến ngày</label><input type="date" id="expTo"></div>
-  </div>
-  <label>Loại công tác (để trống = tất cả)</label>
-  <input id="expTypes" placeholder="SCL,DTXD,SANXUAT">
-  <label>Mã NV (để trống = tất cả)</label>
-  <input id="expNVs" placeholder="NV01,NV02">
-  <button onclick="doExport()">Xuất Excel</button>
-  <button class="gray" onclick="rebuild()">Tính lại toàn bộ</button>
+        <label>Loại công tác:</label>
+        <select id="loaiCongTac" required>
+            <option value="Sản xuất">Sản xuất</option>
+            <option value="SCL1">Sửa chữa lớn (SCL1)</option>
+            <option value="ĐTXD1">Đầu tư Xây dựng (Gói 1)</option>
+            <option value="Nghỉ phép (P)">Nghỉ phép (P)</option>
+            <option value="Đi học (H)">Đi học (H)</option>
+        </select>
+
+        <label>Trạm biến áp:</label>
+        <select id="tram" required>
+            <option value="500kV Di Linh">500 kV Di Linh</option>
+            <option value="220kV Bảo Lộc">220 kV Bảo Lộc</option>
+            <!-- Thêm các trạm khác -->
+        </select>
+
+        <label>Bắt đầu làm việc (Ngày/Giờ):</label>
+        <input type="datetime-local" id="batDau">
+
+        <label>Kết thúc làm việc (Ngày/Giờ):</label>
+        <input type="datetime-local" id="ketThuc">
+
+        <label>Tổng thời gian di chuyển (giờ):</label>
+        <input type="number" id="tgDiChuyen" step="0.5" value="0" min="0">
+
+        <button type="submit">Lưu Dữ Liệu</button>
+        <div class="spinner" id="spinner">Đang xử lý...</div>
+    </form>
 </div>
 
 <script>
-  google.script.run.withSuccessHandler(init).getLists();
+    document.getElementById('timeForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        document.getElementById('spinner').style.display = 'block';
 
-  function init(lists) {
-    const selNV = document.getElementById('manv');
-    selNV.innerHTML = '<option value="">--</option>' +
-      lists.nhanvien.map(n => `<option value="${n.ma}">${n.ma} - ${n.ten}</option>`).join('');
-    const selT = document.getElementById('tram');
-    selT.innerHTML = '<option value="">--</option>' +
-      lists.tram.map(t => `<option>${t}</option>`).join('');
+        const data = {
+            ten: document.getElementById('ten').value,
+            ngayLamViec: document.getElementById('ngayLamViec').value,
+            loaiCongTac: document.getElementById('loaiCongTac').value,
+            tram: document.getElementById('tram').value,
+            batDau: document.getElementById('batDau').value,
+            ketThuc: document.getElementById('ketThuc').value,
+            tgDiChuyen: document.getElementById('tgDiChuyen').value
+        };
 
-    const today = new Date().toISOString().slice(0,10);
-    document.getElementById('ngay').value = today;
-    document.getElementById('expFrom').value = today.slice(0,8) + '01';
-    document.getElementById('expTo').value = today;
-  }
+        // THAY LINK WEB APP CỦA BẠN VÀO ĐÂY
+        const WEB_APP_URL = 'YOUR_WEB_APP_URL_HERE';
 
-  function saveEntry() {
-    const p = {
-      ngay: document.getElementById('ngay').value,
-      manv: document.getElementById('manv').value,
-      loaiCT: document.getElementById('loaiCT').value,
-      maCT: document.getElementById('maCT').value,
-      hangMuc: document.getElementById('hangMuc').value,
-      tram: document.getElementById('tram').value,
-      ctType: document.getElementById('ctType').value,
-      gioBD: document.getElementById('gioBD').value,
-      gioKT: document.getElementById('gioKT').value,
-      dcDiTu: document.getElementById('dcDiTu').value,
-      dcDiDen: document.getElementById('dcDiDen').value,
-      dcVeTu: document.getElementById('dcVeTu').value,
-      dcVeDen: document.getElementById('dcVeDen').value,
-      ghiChu: document.getElementById('ghiChu').value
-    };
-    if (!p.manv || !p.gioBD || !p.gioKT) {
-      alert('Nhập thiếu thông tin!'); return;
-    }
-    google.script.run.withSuccessHandler(r => {
-      document.getElementById('msg').textContent = '✅ Đã lưu dòng ' + r.row;
-      setTimeout(() => document.getElementById('msg').textContent = '', 2000);
-    }).addEntry(p);
-  }
-
-  function doExport() {
-    const p = {
-      fromDate: new Date(document.getElementById('expFrom').value),
-      toDate: new Date(document.getElementById('expTo').value),
-      types: document.getElementById('expTypes').value.split(',').map(s=>s.trim()).filter(Boolean),
-      employees: document.getElementById('expNVs').value.split(',').map(s=>s.trim()).filter(Boolean)
-    };
-    google.script.run.withSuccessHandler(r => {
-      window.open(r.url, '_blank');
-    }).exportExcel(p);
-  }
-
-  function rebuild() {
-    google.script.run.rebuildAll();
-  }
+        fetch(WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(res => {
+            alert('Thành công: ' + res.message);
+            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('timeForm').reset();
+        })
+        .catch(error => {
+            alert('Lỗi: ' + error);
+            document.getElementById('spinner').style.display = 'none';
+        });
+    });
 </script>
+
 </body>
 </html>
