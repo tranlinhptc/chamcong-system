@@ -3,70 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nhật Ký Công Tác - Tổ Thí Nghiệm</title>
+    <title>Hệ Thống Timesheet - Tổ Thí Nghiệm</title>
+    <!-- Bootstrap CSS cho UI chuyên nghiệp -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Choices.js CSS cho Select dạng Chip -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
     <style>
-        body { font-family: Arial, sans-serif; background: #f4f7f6; padding: 20px; }
-        .container { max-width: 500px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin: auto; }
-        h2 { text-align: center; color: #333; }
-        label { font-weight: bold; display: block; margin-top: 10px; }
-        input, select, button { width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; }
-        button { background: #007bff; color: white; border: none; font-size: 16px; cursor: pointer; margin-top: 20px; }
-        button:hover { background: #0056b3; }
-        .spinner { display: none; text-align: center; margin-top: 10px; color: #007bff; }
+        body { background-color: #f0f2f5; font-size: 14px; }
+        .card { box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 12px; border: none; }
+        .nav-tabs .nav-link.active { font-weight: bold; color: #0d6efd; border-bottom: 3px solid #0d6efd; }
+        .table-responsive { max-height: 500px; overflow-y: auto; }
+        thead { position: sticky; top: 0; background: #fff; z-index: 10; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Nhập Giờ Làm Việc</h2>
-    <form id="timeForm">
-        <label>Nhân viên:</label>
-        <select id="ten" required>
-            <option value="">-- Chọn người --</option>
-            <option value="Nguyễn Văn A">Nguyễn Văn A</option>
-            <!-- Thêm đủ 24 người tại đây -->
-        </select>
+<div class="container my-5">
+    <h3 class="text-center mb-4 fw-bold text-uppercase text-primary">Phần mềm Quản lý Khối lượng & Chấm công</h3>
+    
+    <!-- TABS -->
+    <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="nhap-tab" data-bs-toggle="tab" data-bs-target="#nhap" type="button">📝 Nhập Liệu (Chấm công nhóm)</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="thongke-tab" data-bs-toggle="tab" data-bs-target="#thongke" type="button" onclick="loadData()">📊 Thống kê & Xuất Excel</button>
+        </li>
+    </ul>
 
-        <label>Ngày làm việc (Tính từ 6h sáng):</label>
-        <input type="date" id="ngayLamViec" required>
+    <div class="tab-content" id="myTabContent">
+        
+        <!-- TAB 1: NHẬP LIỆU -->
+        <div class="tab-pane fade show active" id="nhap" role="tabpanel">
+            <div class="card p-4 mx-auto" style="max-width: 800px;">
+                <form id="timeForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-danger">👥 Chọn nhân sự (Hỗ trợ chọn nhiều người):</label>
+                        <select class="form-control" id="nhanVienSelect" multiple required>
+                            <!-- 24 người sẽ được load bằng JS -->
+                        </select>
+                    </div>
 
-        <label>Loại công tác:</label>
-        <select id="loaiCongTac" required>
-            <option value="Sản xuất">Sản xuất</option>
-            <option value="SCL1">Sửa chữa lớn (SCL1)</option>
-            <option value="ĐTXD1">Đầu tư Xây dựng (Gói 1)</option>
-            <option value="Nghỉ phép (P)">Nghỉ phép (P)</option>
-            <option value="Đi học (H)">Đi học (H)</option>
-        </select>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Ngày phân công:</label>
+                            <input type="date" class="form-control" id="ngayLamViec" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Loại công tác:</label>
+                            <select class="form-select" id="loaiCongTac" required>
+                                <option value="Sản xuất">Công tác Sản xuất</option>
+                                <option value="SCL1">Sửa chữa lớn 1 (SCL1)</option>
+                                <option value="SCL2">Sửa chữa lớn 2 (SCL2)</option>
+                                <option value="ĐTXD1">Đầu tư Xây dựng (Gói 1)</option>
+                                <option value="Nghỉ phép (P)">Nghỉ phép (P)</option>
+                                <option value="Đi học (H)">Đi học (H)</option>
+                            </select>
+                        </div>
+                    </div>
 
-        <label>Trạm biến áp:</label>
-        <select id="tram" required>
-            <option value="500kV Di Linh">500 kV Di Linh</option>
-            <option value="220kV Bảo Lộc">220 kV Bảo Lộc</option>
-            <!-- Thêm các trạm khác -->
-        </select>
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">Trạm thực hiện:</label>
+                            <select class="form-select" id="tram" required>
+                                <option value="500kV Di Linh">Trạm 500 kV Di Linh</option>
+                                <option value="220kV Bảo Lộc">Trạm 220 kV Bảo Lộc</option>
+                                <option value="220kV Đức Trọng">Trạm 220 kV Đức Trọng</option>
+                                <option value="500kV Đắk Nông">Trạm 500 kV Đắk Nông</option>
+                                <!-- Có thể thêm các kho và trạm khác -->
+                            </select>
+                        </div>
+                    </div>
 
-        <label>Bắt đầu làm việc (Ngày/Giờ):</label>
-        <input type="datetime-local" id="batDau">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Giờ bắt đầu làm:</label>
+                            <input type="datetime-local" class="form-control" id="batDau" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Giờ kết thúc làm:</label>
+                            <input type="datetime-local" class="form-control" id="ketThuc" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Tổng giờ di chuyển:</label>
+                            <input type="number" class="form-control" id="tgDiChuyen" step="0.5" value="0" min="0">
+                        </div>
+                    </div>
 
-        <label>Kết thúc làm việc (Ngày/Giờ):</label>
-        <input type="datetime-local" id="ketThuc">
+                    <div class="text-center mt-3">
+                        <button type="submit" class="btn btn-primary btn-lg px-5" id="btnSubmit">💾 Lưu Dữ Liệu Chấm Công</button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
-        <label>Tổng thời gian di chuyển (giờ):</label>
-        <input type="number" id="tgDiChuyen" step="0.5" value="0" min="0">
+        <!-- TAB 2: THỐNG KÊ & XUẤT EXCEL -->
+        <div class="tab-pane fade" id="thongke" role="tabpanel">
+            <div class="card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold">Lịch sử Chấm công Gần đây</h5>
+                    <div>
+                        <button class="btn btn-success" onclick="exportToExcel()">📊 Xuất File Excel</button>
+                        <button class="btn btn-secondary" onclick="loadData()">🔄 Làm mới</button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle" id="thongkeTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Ngày</th>
+                                <th>Nhân sự</th>
+                                <th>Công tác</th>
+                                <th>Trạm</th>
+                                <th>HC (h)</th>
+                                <th>NG Ngày</th>
+                                <th>NG Đêm</th>
+                                <th>Hệ số</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr><td colspan="8" class="text-center text-muted">Đang tải dữ liệu...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-        <button type="submit">Lưu Dữ Liệu</button>
-        <div class="spinner" id="spinner">Đang xử lý...</div>
-    </form>
+    </div>
 </div>
 
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Thư viện tạo Select dạng Chip -->
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<!-- Thư viện xuất Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 <script>
+    // THAY LINK GOOGLE APPS SCRIPT VÀO ĐÂY
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxeQrd6TVvdOogxzWUX5_XYHyvwSR4YeEq8-khAaK-_z4EMBEdXL2SifpDxJRMLC1Lt/exec";
+
+    // 1. Khởi tạo danh sách 24 nhân sự
+    const danhSach24Nguoi = [
+        "Nguyễn Văn A", "Trần Văn B", "Lê Thị C", "Phạm Văn D", "Hoàng Văn E", 
+        "Vũ Văn F", "Đặng Văn G", "Bùi Văn H", "Đỗ Văn I", "Hồ Văn K" 
+        // Bạn copy paste đủ 24 người thật của tổ vào đây
+    ];
+
+    const selectEl = document.getElementById('nhanVienSelect');
+    danhSach24Nguoi.forEach(ten => {
+        let opt = document.createElement('option');
+        opt.value = ten; opt.textContent = ten;
+        selectEl.appendChild(opt);
+    });
+
+    // Kích hoạt Choices.js (Input dạng Chip)
+    const nhanVienChoices = new Choices('#nhanVienSelect', {
+        removeItemButton: true,
+        placeholder: true,
+        placeholderValue: "Tìm hoặc chọn tên (có thể chọn nhiều)..."
+    });
+
+    // 2. Xử lý nút Lưu (Gửi API)
     document.getElementById('timeForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        document.getElementById('spinner').style.display = 'block';
+        
+        const dsDuocChon = nhanVienChoices.getValue(true); // Lấy mảng các tên đã chọn
+        if(dsDuocChon.length === 0) {
+            alert("Vui lòng chọn ít nhất 1 nhân sự!"); return;
+        }
 
-        const data = {
-            ten: document.getElementById('ten').value,
+        const btn = document.getElementById('btnSubmit');
+        btn.disabled = true;
+        btn.innerHTML = "⏳ Đang xử lý...";
+
+        const payload = {
+            dsNhanVien: dsDuocChon,
             ngayLamViec: document.getElementById('ngayLamViec').value,
             loaiCongTac: document.getElementById('loaiCongTac').value,
             tram: document.getElementById('tram').value,
@@ -75,25 +188,69 @@
             tgDiChuyen: document.getElementById('tgDiChuyen').value
         };
 
-        // THAY LINK WEB APP CỦA BẠN VÀO ĐÂY
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxeQrd6TVvdOogxzWUX5_XYHyvwSR4YeEq8-khAaK-_z4EMBEdXL2SifpDxJRMLC1Lt/exec';
-
         fetch(WEB_APP_URL, {
             method: 'POST',
-            body: JSON.stringify(data)
+            body: JSON.stringify(payload)
         })
-        .then(response => response.json())
-        .then(res => {
-            alert('Thành công: ' + res.message);
-            document.getElementById('spinner').style.display = 'none';
+        .then(res => res.json())
+        .then(data => {
+            alert(data.message);
+            btn.disabled = false;
+            btn.innerHTML = "💾 Lưu Dữ Liệu Chấm Công";
+            nhanVienChoices.removeActiveItems(); // Xóa chip đã chọn
             document.getElementById('timeForm').reset();
         })
-        .catch(error => {
-            alert('Lỗi: ' + error);
-            document.getElementById('spinner').style.display = 'none';
-        });
+        .catch(err => { alert("Lỗi mạng!"); btn.disabled = false; btn.innerHTML = "💾 Lưu Dữ Liệu"; });
     });
-</script>
 
+    // 3. Tải dữ liệu lên bảng Thống kê
+    let cachedData = []; // Lưu để xuất Excel
+    function loadData() {
+        document.getElementById('tableBody').innerHTML = '<tr><td colspan="8" class="text-center text-primary">Đang tải dữ liệu từ server...</td></tr>';
+        
+        fetch(WEB_APP_URL)
+        .then(res => res.json())
+        .then(data => {
+            cachedData = data;
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            if(data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">Chưa có dữ liệu</td></tr>';
+                return;
+            }
+
+            data.forEach(row => {
+                let ngay = new Date(row["Ngày"]).toLocaleDateString('vi-VN');
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${ngay}</td>
+                        <td class="fw-bold">${row["Nhân sự"]}</td>
+                        <td><span class="badge bg-secondary">${row["Loại công tác"]}</span></td>
+                        <td>${row["Trạm"]}</td>
+                        <td>${row["HC (h)"]}</td>
+                        <td class="text-danger">${row["NG Ngày (h)"]}</td>
+                        <td class="text-danger">${row["NG Đêm (h)"]}</td>
+                        <td class="fw-bold text-success">${row["Hệ số quy đổi"]}</td>
+                    </tr>
+                `;
+            });
+        }).catch(err => alert("Lỗi khi tải dữ liệu!"));
+    }
+
+    // 4. Xuất Excel sử dụng SheetJS
+    function exportToExcel() {
+        if(cachedData.length === 0) {
+            alert("Chưa có dữ liệu để xuất!"); return;
+        }
+        // Tạo Worksheet từ JSON data
+        const ws = XLSX.utils.json_to_sheet(cachedData);
+        // Tạo Workbook
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "ThongKeChamCong");
+        // Tải xuống file Excel
+        XLSX.writeFile(wb, "Thong_Ke_Cong_Tac.xlsx");
+    }
+</script>
 </body>
 </html>
