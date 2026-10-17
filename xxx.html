@@ -1,256 +1,809 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Timesheet - Tổ Thí Nghiệm</title>
-    <!-- Bootstrap CSS cho UI chuyên nghiệp -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Choices.js CSS cho Select dạng Chip -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
-    <style>
-        body { background-color: #f0f2f5; font-size: 14px; }
-        .card { box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 12px; border: none; }
-        .nav-tabs .nav-link.active { font-weight: bold; color: #0d6efd; border-bottom: 3px solid #0d6efd; }
-        .table-responsive { max-height: 500px; overflow-y: auto; }
-        thead { position: sticky; top: 0; background: #fff; z-index: 10; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hệ Thống Timesheet - Tổ Thí Nghiệm</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+  <style>
+    body { background-color: #f0f2f5; font-size: 14px; }
+    .card { box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 12px; border: none; }
+    .nav-tabs .nav-link.active { font-weight: bold; color: #0d6efd; border-bottom: 3px solid #0d6efd; }
+    .table-responsive { max-height: 620px; overflow-y: auto; }
+    thead { position: sticky; top: 0; background: #fff; z-index: 10; }
+    .warn-row { background-color: #fff3cd !important; }
+    .hidden { display: none !important; }
+    .filter-box { background: #f8f9fa; border-radius: 8px; padding: 12px; border: 1px solid #e3e6ea; }
+    .cell-hc { background:#e7f1ff; } .cell-ot { background:#fff3cd; }
+    .cell-night { background:#e2d9f3; } .cell-weekend { background:#d1e7dd; }
+    .cell-holiday { background:#f8d7da; }
+    #thongkeTable { font-size: 12.5px; }
+    #thongkeTable th, #thongkeTable td { white-space: nowrap; }
+  </style>
 </head>
 <body>
 
-<div class="container my-5">
-    <h3 class="text-center mb-4 fw-bold text-uppercase text-primary">Phần mềm Quản lý Khối lượng & Chấm công</h3>
-    
-    <!-- TABS -->
-    <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="nhap-tab" data-bs-toggle="tab" data-bs-target="#nhap" type="button">📝 Nhập Liệu (Chấm công nhóm)</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="thongke-tab" data-bs-toggle="tab" data-bs-target="#thongke" type="button" onclick="loadData()">📊 Thống kê & Xuất Excel</button>
-        </li>
-    </ul>
+<div class="container-fluid my-4 px-4">
+  <h3 class="text-center mb-4 fw-bold text-uppercase text-primary">Phần mềm Quản lý Khối lượng & Chấm công</h3>
 
-    <div class="tab-content" id="myTabContent">
-        
-        <!-- TAB 1: NHẬP LIỆU -->
-        <div class="tab-pane fade show active" id="nhap" role="tabpanel">
-            <div class="card p-4 mx-auto" style="max-width: 800px;">
-                <form id="timeForm">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-danger">👥 Chọn nhân sự (Hỗ trợ chọn nhiều người):</label>
-                        <select class="form-control" id="nhanVienSelect" multiple required>
-                            <!-- 24 người sẽ được load bằng JS -->
-                        </select>
-                    </div>
+  <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
+    <li class="nav-item"><button class="nav-link active" id="nhap-tab" data-bs-toggle="tab" data-bs-target="#nhap" type="button">📝 Nhập liệu</button></li>
+    <li class="nav-item"><button class="nav-link" id="thongke-tab" data-bs-toggle="tab" data-bs-target="#thongke" type="button" onclick="onTabThongKe()">📊 Thống kê & Xuất Excel</button></li>
+    <li class="nav-item"><button class="nav-link" id="caidat-tab" data-bs-toggle="tab" data-bs-target="#caidat" type="button" onclick="loadConfig()">⚙️ Cấu hình</button></li>
+  </ul>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Ngày phân công:</label>
-                            <input type="date" class="form-control" id="ngayLamViec" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Loại công tác:</label>
-                            <select class="form-select" id="loaiCongTac" required>
-                                <option value="Sản xuất">Công tác Sản xuất</option>
-                                <option value="SCL1">Sửa chữa lớn 1 (SCL1)</option>
-                                <option value="SCL2">Sửa chữa lớn 2 (SCL2)</option>
-                                <option value="ĐTXD1">Đầu tư Xây dựng (Gói 1)</option>
-                                <option value="Nghỉ phép (P)">Nghỉ phép (P)</option>
-                                <option value="Đi học (H)">Đi học (H)</option>
-                            </select>
-                        </div>
-                    </div>
+  <div class="tab-content">
 
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label class="form-label fw-bold">Trạm thực hiện:</label>
-                            <select class="form-select" id="tram" required>
-                                <option value="500kV Di Linh">Trạm 500 kV Di Linh</option>
-                                <option value="220kV Bảo Lộc">Trạm 220 kV Bảo Lộc</option>
-                                <option value="220kV Đức Trọng">Trạm 220 kV Đức Trọng</option>
-                                <option value="500kV Đắk Nông">Trạm 500 kV Đắk Nông</option>
-                                <!-- Có thể thêm các kho và trạm khác -->
-                            </select>
-                        </div>
-                    </div>
+    <!-- ============ TAB 1: NHẬP LIỆU ============ -->
+    <div class="tab-pane fade show active" id="nhap">
+      <div class="card p-4 mx-auto" style="max-width: 960px;">
+        <form id="timeForm" novalidate>
 
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label fw-bold">Giờ bắt đầu làm:</label>
-                            <input type="datetime-local" class="form-control" id="batDau" required>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label fw-bold">Giờ kết thúc làm:</label>
-                            <input type="datetime-local" class="form-control" id="ketThuc" required>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label fw-bold">Tổng giờ di chuyển:</label>
-                            <input type="number" class="form-control" id="tgDiChuyen" step="0.5" value="0" min="0">
-                        </div>
-                    </div>
-
-                    <div class="text-center mt-3">
-                        <button type="submit" class="btn btn-primary btn-lg px-5" id="btnSubmit">💾 Lưu Dữ Liệu Chấm Công</button>
-                    </div>
-                </form>
+          <!-- Nhân sự + Ngày -->
+          <div class="row">
+            <div class="col-md-7 mb-3">
+              <label class="form-label fw-bold text-danger">👥 Chọn nhân sự (có thể chọn nhiều):</label>
+              <select class="form-control" id="nhanVienSelect" multiple required></select>
             </div>
-        </div>
-
-        <!-- TAB 2: THỐNG KÊ & XUẤT EXCEL -->
-        <div class="tab-pane fade" id="thongke" role="tabpanel">
-            <div class="card p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold">Lịch sử Chấm công Gần đây</h5>
-                    <div>
-                        <button class="btn btn-success" onclick="exportToExcel()">📊 Xuất File Excel</button>
-                        <button class="btn btn-secondary" onclick="loadData()">🔄 Làm mới</button>
-                    </div>
-                </div>
-                
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover align-middle" id="thongkeTable">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Ngày</th>
-                                <th>Nhân sự</th>
-                                <th>Công tác</th>
-                                <th>Trạm</th>
-                                <th>HC (h)</th>
-                                <th>NG Ngày</th>
-                                <th>NG Đêm</th>
-                                <th>Hệ số</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody">
-                            <tr><td colspan="8" class="text-center text-muted">Đang tải dữ liệu...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
+            <div class="col-md-5 mb-3">
+              <label class="form-label fw-bold">Ngày công tác:</label>
+              <input type="date" class="form-control" id="ngayLamViec" required>
+              <small class="text-muted">Tính từ 06:00 hôm nay → 06:00 hôm sau</small>
             </div>
-        </div>
+          </div>
 
+          <!-- Loại CT + Mã CT + Hạng mục -->
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label fw-bold">Loại công tác:</label>
+              <select class="form-select" id="loaiCongTac" required>
+                <option value="SANXUAT">Công tác Sản xuất</option>
+                <option value="SCL">Sửa chữa lớn (SCL)</option>
+                <option value="DTXD">Đầu tư Xây dựng (ĐTXD)</option>
+                <option value="CT">Công tác CT1/CT2</option>
+                <option value="H">Đi học (H)</option>
+                <option value="P">Nghỉ phép (P)</option>
+                <option value="NGHIBU">Nghỉ bù</option>
+                <option value="DIEUDUONG">Nghỉ điều dưỡng</option>
+                <option value="THAISAN">Nghỉ thai sản</option>
+                <option value="OM">Nghỉ ốm đau</option>
+                <option value="KHAC">Khác</option>
+              </select>
+            </div>
+            <div class="col-md-4 mb-3" id="groupMaCT">
+              <label class="form-label fw-bold">Mã CT <span class="text-muted">(SCL1, SCL2, Gói 1…)</span>:</label>
+              <input class="form-control" id="maCT" list="maCTList" placeholder="VD: SCL1">
+              <datalist id="maCTList">
+                <option value="SCL1"><option value="SCL2"><option value="SCL3">
+                <option value="SCL4"><option value="SCL5">
+                <option value="Gói 1"><option value="Gói 2"><option value="Gói 3">
+              </datalist>
+            </div>
+            <div class="col-md-4 mb-3" id="groupHangMuc">
+              <label class="form-label fw-bold">Hạng mục:</label>
+              <input class="form-control" id="hangMuc" placeholder="VD: Thay cuộn cắt">
+            </div>
+          </div>
+
+          <!-- Trạm + CT1/CT2 -->
+          <div class="row" id="groupTram">
+            <div class="col-md-8 mb-3">
+              <label class="form-label fw-bold">Trạm thực hiện:</label>
+              <select class="form-select" id="tram"></select>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label fw-bold">CT1 / CT2:</label>
+              <select class="form-select" id="ctType">
+                <option value="">-- Tự động --</option>
+                <option value="CT1">CT1 (đi & về trong ngày)</option>
+                <option value="CT2">CT2 (qua đêm / nhiều ngày)</option>
+              </select>
+              <small class="text-muted" id="baoLocHint" style="display:none">⚠️ Trạm Bảo Lộc: không tính CT</small>
+            </div>
+          </div>
+
+          <!-- Giờ làm việc -->
+          <div class="row" id="groupGio">
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Giờ bắt đầu:</label>
+              <input type="time" class="form-control" id="batDau" value="07:00">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Giờ kết thúc:</label>
+              <input type="time" class="form-control" id="ketThuc" value="17:00">
+              <small class="text-muted">Nếu KT &lt; BĐ → hiểu là qua nửa đêm</small>
+            </div>
+          </div>
+
+          <!-- Di chuyển 4 mốc -->
+          <div class="row" id="groupDiChuyen">
+            <div class="col-12 mb-1"><label class="form-label fw-bold">🛣️ Di chuyển (hệ số 1 cho mọi loại CT):</label></div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Đi — Từ:</label>
+              <input type="time" class="form-control" id="dcDiTu">
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Đi — Đến:</label>
+              <input type="time" class="form-control" id="dcDiDen">
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Về — Từ:</label>
+              <input type="time" class="form-control" id="dcVeTu">
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Về — Đến:</label>
+              <input type="time" class="form-control" id="dcVeDen">
+            </div>
+          </div>
+
+          <!-- Ghi chú -->
+          <div class="mb-3">
+            <label class="form-label fw-bold">Ghi chú:</label>
+            <input class="form-control" id="ghiChu">
+          </div>
+
+          <div class="text-center mt-3">
+            <button type="submit" class="btn btn-primary btn-lg px-5" id="btnSubmit">💾 Lưu Dữ Liệu</button>
+            <button type="button" class="btn btn-outline-secondary btn-lg px-4" onclick="resetForm()">🔄 Làm mới</button>
+          </div>
+
+          <div class="mt-3 text-center" id="statusMsg"></div>
+        </form>
+      </div>
     </div>
+
+    <!-- ============ TAB 2: THỐNG KÊ ============ -->
+    <div class="tab-pane fade" id="thongke">
+      <div class="card p-4">
+
+        <!-- Bộ lọc -->
+        <div class="filter-box mb-3">
+          <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+              <label class="form-label">Từ ngày</label>
+              <input type="date" class="form-control" id="fFrom">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Đến ngày</label>
+              <input type="date" class="form-control" id="fTo">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Nhân sự (trống = tất cả)</label>
+              <select class="form-select" id="fNhanVien" multiple></select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Loại CT (trống = tất cả)</label>
+              <select class="form-select" id="fLoaiCT" multiple>
+                <option value="SANXUAT">Sản xuất</option>
+                <option value="SCL">SCL</option>
+                <option value="DTXD">ĐTXD</option>
+                <option value="CT">CT</option>
+                <option value="H">H</option>
+                <option value="P">P</option>
+                <option value="NGHIBU">Nghỉ bù</option>
+                <option value="DIEUDUONG">Điều dưỡng</option>
+                <option value="THAISAN">Thai sản</option>
+                <option value="OM">Ốm</option>
+                <option value="KHAC">Khác</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Mã CT cụ thể</label>
+              <select class="form-select" id="fMaCT" multiple></select>
+            </div>
+            <div class="col-md-1">
+              <button class="btn btn-primary w-100" onclick="loadData()">🔍 Xem</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chế độ xem -->
+        <div class="d-flex gap-3 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="viewMode" id="vmDay" value="day" checked onchange="renderTable()">
+            <label class="form-check-label" for="vmDay">📋 Chi tiết theo ngày</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="viewMode" id="vmStaff" value="staff" onchange="renderTable()">
+            <label class="form-check-label" for="vmStaff">📊 Tổng hợp theo nhân viên</label>
+          </div>
+        </div>
+
+        <!-- Cảnh báo -->
+        <div id="warningBox"></div>
+
+        <!-- Bảng -->
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0" id="tableTitle">Kết quả</h6>
+          <div>
+            <button class="btn btn-success btn-sm" onclick="exportToExcelClient()">📊 Xuất Excel (nhanh)</button>
+            <button class="btn btn-outline-success btn-sm" onclick="exportFromServer()">📥 Xuất Excel (đầy đủ 3 sheet)</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-bordered table-sm table-hover align-middle" id="thongkeTable">
+            <thead class="table-dark">
+              <tr id="tableHead">
+                <!-- Render bằng JS -->
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr><td class="text-center text-muted">Nhấn "Xem" để tải dữ liệu</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ TAB 3: CẤU HÌNH ============ -->
+    <div class="tab-pane fade" id="caidat">
+      <div class="card p-4">
+        <h5 class="fw-bold">📅 Ngày lễ Tết</h5>
+        <p class="text-muted mb-2">Những ngày này sẽ được tính hệ số Lễ (ngày×3, đêm×3.5).</p>
+        <div id="holidayList" class="mb-3"></div>
+        <div class="row g-2 align-items-end">
+          <div class="col-md-4">
+            <label class="form-label">Ngày lễ mới:</label>
+            <input type="date" class="form-control" id="newHolidayDate">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Tên lễ:</label>
+            <input class="form-control" id="newHolidayName" placeholder="VD: Quốc khánh 2/9">
+          </div>
+          <div class="col-md-2">
+            <button class="btn btn-primary w-100" onclick="addHoliday()">➕ Thêm</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
 
-<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Thư viện tạo Select dạng Chip -->
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
-<!-- Thư viện xuất Excel -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <script>
-    // THAY LINK GOOGLE APPS SCRIPT VÀO ĐÂY
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxeQrd6TVvdOogxzWUX5_XYHyvwSR4YeEq8-khAaK-_z4EMBEdXL2SifpDxJRMLC1Lt/exec";
+/* ==========================================================
+   CẤU HÌNH
+   ========================================================== */
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxeQrd6TVvdOogxzWUX5_XYHyvwSR4YeEq8-khAaK-_z4EMBEdXL2SifpDxJRMLC1Lt/exec";
 
-    // 1. Khởi tạo danh sách 24 nhân sự
-    const danhSach24Nguoi = [
-        "Nguyễn Văn A", "Trần Văn B", "Lê Thị C", "Phạm Văn D", "Hoàng Văn E", 
-        "Vũ Văn F", "Đặng Văn G", "Bùi Văn H", "Đỗ Văn I", "Hồ Văn K" 
-        // Bạn copy paste đủ 24 người thật của tổ vào đây
-    ];
+const LEAVE_TYPES = ['P','H','NGHIBU','DIEUDUONG','THAISAN','OM'];
+const LABEL_MAP = {
+  SANXUAT:'Sản xuất', SCL:'SCL', DTXD:'ĐTXD', CT:'CT',
+  H:'H', P:'P', NGHIBU:'Nghỉ bù', DIEUDUONG:'Điều dưỡng',
+  THAISAN:'Thai sản', OM:'Ốm', KHAC:'Khác'
+};
 
-    const selectEl = document.getElementById('nhanVienSelect');
-    danhSach24Nguoi.forEach(ten => {
-        let opt = document.createElement('option');
-        opt.value = ten; opt.textContent = ten;
-        selectEl.appendChild(opt);
+let CONFIG = { staff: [], stations: [], holidays: [], codes: [] };
+let nhanVienChoices, fNhanVienChoices, fLoaiChoices, fMaCTChoices;
+let cachedData = [];
+
+/* ==========================================================
+   KHỞI TẠO
+   ========================================================== */
+window.addEventListener('DOMContentLoaded', () => {
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('ngayLamViec').value = today;
+  document.getElementById('fFrom').value = today.slice(0,8) + '01';
+  document.getElementById('fTo').value = today;
+
+  nhanVienChoices = new Choices('#nhanVienSelect', {
+    removeItemButton: true, placeholder: true,
+    placeholderValue: 'Tìm hoặc chọn tên...', searchResultLimit: 30
+  });
+  fNhanVienChoices = new Choices('#fNhanVien', {
+    removeItemButton: true, placeholder: true,
+    placeholderValue: 'Tất cả nhân viên...', searchResultLimit: 30
+  });
+  fLoaiChoices = new Choices('#fLoaiCT', {
+    removeItemButton: true, placeholder: true,
+    placeholderValue: 'Tất cả loại...', searchResultLimit: 30
+  });
+  fMaCTChoices = new Choices('#fMaCT', {
+    removeItemButton: true, placeholder: true,
+    placeholderValue: 'Tất cả mã...', searchResultLimit: 30
+  });
+
+  loadConfig();
+  bindFormBehavior();
+  renderTableHead('day');
+});
+
+/* ==========================================================
+   LOAD CONFIG (nhân viên, trạm, ngày lễ, mã CT)
+   ========================================================== */
+function loadConfig() {
+  fetch(WEB_APP_URL + '?action=getConfig')
+    .then(r => r.json())
+    .then(cfg => {
+      CONFIG = cfg;
+      renderStaffSelect(cfg.staff || []);
+      renderStationSelect(cfg.stations || []);
+      renderHolidayList(cfg.holidays || []);
+      renderCodeSelect(cfg.codes || []);
+    })
+    .catch(err => {
+      console.warn('Fallback config:', err);
+      const fallbackStaff = Array.from({length:24}, (_,i) => ({ id: 'NV'+String(i+1).padStart(2,'0'), name: 'Nhân viên '+(i+1) }));
+      const fallbackStation = [
+        'TBA 500kV Di Linh','TBA 220kV Bảo Lộc','TBA 220kV Đức Trọng','TBA 220kV Phan Thiết',
+        'TBA 220kV Hàm Tân','TBA 220kV Vĩnh Hảo','TBA 500kV Vĩnh Tân','TBA 500kV Đắk Nông',
+        'TBA 500kV Thuận Nam','TBA 220kV Đắk Nông','TBA 220kV Tháp Chàm','TBA 220kV Phan Rí',
+        'Kho Đất Nông','Kho Lâm Đồng','Kho Di Linh'
+      ];
+      renderStaffSelect(fallbackStaff);
+      renderStationSelect(fallbackStation);
     });
+}
 
-    // Kích hoạt Choices.js (Input dạng Chip)
-    const nhanVienChoices = new Choices('#nhanVienSelect', {
-        removeItemButton: true,
-        placeholder: true,
-        placeholderValue: "Tìm hoặc chọn tên (có thể chọn nhiều)..."
+function renderStaffSelect(staff) {
+  nhanVienChoices.clearChoices();
+  nhanVienChoices.setChoices(
+    staff.map(s => ({ value: s.id, label: s.id + ' - ' + s.name })), 'value','label', true);
+  fNhanVienChoices.clearChoices();
+  fNhanVienChoices.setChoices(
+    staff.map(s => ({ value: s.id, label: s.id + ' - ' + s.name })), 'value','label', true);
+}
+
+function renderStationSelect(stations) {
+  const sel = document.getElementById('tram');
+  sel.innerHTML = '<option value="">-- Chọn trạm --</option>' +
+    stations.map(s => `<option value="${s}">${s}</option>`).join('');
+}
+
+function renderCodeSelect(codes) {
+  fMaCTChoices.clearChoices();
+  fMaCTChoices.setChoices(
+    codes.map(c => ({ value: c, label: c })), 'value','label', true);
+}
+
+function renderHolidayList(holidays) {
+  const box = document.getElementById('holidayList');
+  if (!holidays || !holidays.length) {
+    box.innerHTML = '<p class="text-muted">Chưa có ngày lễ nào.</p>'; return;
+  }
+  box.innerHTML = '<table class="table table-sm table-bordered"><thead class="table-light"><tr><th>Ngày</th><th>Tên</th><th style="width:80px"></th></tr></thead><tbody>' +
+    holidays.map(h => `<tr><td>${h.date}</td><td>${h.name}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="deleteHoliday('${h.date}')">Xóa</button></td></tr>`).join('') +
+    '</tbody></table>';
+}
+
+/* ==========================================================
+   FORM BEHAVIOR
+   ========================================================== */
+function bindFormBehavior() {
+  document.getElementById('loaiCongTac').addEventListener('change', updateVisibility);
+  document.getElementById('tram').addEventListener('change', checkBaoLoc);
+  updateVisibility();
+}
+
+function updateVisibility() {
+  const loai = document.getElementById('loaiCongTac').value;
+  const isLeave = LEAVE_TYPES.includes(loai);
+  document.getElementById('groupGio').style.display = isLeave ? 'none' : '';
+  document.getElementById('groupDiChuyen').style.display = isLeave ? 'none' : '';
+  document.getElementById('groupTram').style.display = isLeave ? 'none' : '';
+  document.getElementById('groupMaCT').style.display =
+    ['SCL','DTXD','CT'].includes(loai) ? '' : 'none';
+  document.getElementById('groupHangMuc').style.display =
+    ['SCL','DTXD'].includes(loai) ? '' : 'none';
+}
+
+function checkBaoLoc() {
+  const tram = document.getElementById('tram').value;
+  const hint = document.getElementById('baoLocHint');
+  const ctSel = document.getElementById('ctType');
+  if (tram.includes('Bảo Lộc')) {
+    hint.style.display = ''; ctSel.value = ''; ctSel.disabled = true;
+  } else {
+    hint.style.display = 'none'; ctSel.disabled = false;
+  }
+}
+
+function resetForm() {
+  document.getElementById('timeForm').reset();
+  document.getElementById('ngayLamViec').value = new Date().toISOString().slice(0,10);
+  document.getElementById('batDau').value = '07:00';
+  document.getElementById('ketThuc').value = '17:00';
+  nhanVienChoices.removeActiveItems();
+  updateVisibility();
+  document.getElementById('statusMsg').textContent = '';
+}
+
+/* ==========================================================
+   SUBMIT
+   ========================================================== */
+document.getElementById('timeForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const dsNV = nhanVienChoices.getValue(true);
+  if (!dsNV.length) { alert('Chọn ít nhất 1 nhân sự!'); return; }
+
+  const loai = document.getElementById('loaiCongTac').value;
+  const isLeave = LEAVE_TYPES.includes(loai);
+
+  const payload = {
+    action: 'addEntry',
+    dsNhanVien: dsNV,
+    ngay: document.getElementById('ngayLamViec').value,
+    loaiCT: loai,
+    maCT: document.getElementById('maCT').value.trim(),
+    hangMuc: document.getElementById('hangMuc').value.trim(),
+    tram: isLeave ? '' : document.getElementById('tram').value,
+    ctType: isLeave ? '' : document.getElementById('ctType').value,
+    batDau: isLeave ? '' : document.getElementById('batDau').value,
+    ketThuc: isLeave ? '' : document.getElementById('ketThuc').value,
+    dcDiTu: isLeave ? '' : document.getElementById('dcDiTu').value,
+    dcDiDen: isLeave ? '' : document.getElementById('dcDiDen').value,
+    dcVeTu: isLeave ? '' : document.getElementById('dcVeTu').value,
+    dcVeDen: isLeave ? '' : document.getElementById('dcVeDen').value,
+    ghiChu: document.getElementById('ghiChu').value.trim()
+  };
+
+  if (!payload.ngay) { alert('Chọn ngày công tác!'); return; }
+  if (!isLeave) {
+    if (!payload.batDau || !payload.ketThuc) { alert('Nhập giờ bắt đầu/kết thúc!'); return; }
+    if (!payload.tram) { alert('Chọn trạm!'); return; }
+    // Cảnh báo thời lượng bất thường
+    const mins = diffMinutes(payload.batDau, payload.ketThuc);
+    if (mins < 30) { if(!confirm('Thời lượng < 30 phút. Tiếp tục?')) return; }
+    if (mins > 20*60) { if(!confirm('Thời lượng > 20 giờ. Tiếp tục?')) return; }
+  }
+
+  const btn = document.getElementById('btnSubmit');
+  btn.disabled = true; btn.textContent = '⏳ Đang lưu...';
+
+  fetch(WEB_APP_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.error) throw new Error(data.error);
+    document.getElementById('statusMsg').innerHTML =
+      '<span class="text-success fw-bold">✅ ' + (data.message || 'Đã lưu') +
+      ' — ' + dsNV.length + ' dòng</span>';
+    resetForm();
+  })
+  .catch(err => { alert('Lỗi: ' + err.message); })
+  .finally(() => { btn.disabled = false; btn.textContent = '💾 Lưu Dữ Liệu'; });
+});
+
+function diffMinutes(t1, t2) {
+  const [h1,m1] = t1.split(':').map(Number);
+  const [h2,m2] = t2.split(':').map(Number);
+  let a = h1*60+m1, b = h2*60+m2;
+  if (b <= a) b += 1440;
+  return b - a;
+}
+
+/* ==========================================================
+   TAB THỐNG KÊ
+   ========================================================== */
+function onTabThongKe() { loadData(); }
+
+function loadData() {
+  const from = document.getElementById('fFrom').value;
+  const to = document.getElementById('fTo').value;
+  if (!from || !to) { alert('Chọn khoảng ngày!'); return; }
+  if (from > to) { alert('Từ ngày phải ≤ Đến ngày!'); return; }
+
+  const types = fLoaiChoices.getValue(true);
+  const staffIds = fNhanVienChoices.getValue(true);
+  const codes = fMaCTChoices.getValue(true);
+
+  document.getElementById('tableBody').innerHTML =
+    '<tr><td colspan="30" class="text-center text-primary">⏳ Đang tải...</td></tr>';
+
+  const params = new URLSearchParams({
+    action: 'getData',
+    from, to,
+    types: types.join(','),
+    staffIds: staffIds.join(','),
+    codes: codes.join(',')
+  });
+
+  fetch(WEB_APP_URL + '?' + params.toString())
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) throw new Error(data.error);
+      cachedData = data.rows || [];
+      renderTable();
+      renderWarnings();
+    })
+    .catch(err => {
+      document.getElementById('tableBody').innerHTML =
+        '<tr><td colspan="30" class="text-danger text-center">Lỗi: ' + err.message + '</td></tr>';
     });
+}
 
-    // 2. Xử lý nút Lưu (Gửi API)
-    document.getElementById('timeForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const dsDuocChon = nhanVienChoices.getValue(true); // Lấy mảng các tên đã chọn
-        if(dsDuocChon.length === 0) {
-            alert("Vui lòng chọn ít nhất 1 nhân sự!"); return;
-        }
+/* -------- Đầu bảng theo chế độ xem -------- */
+function renderTableHead(mode) {
+  const head = document.getElementById('tableHead');
+  if (mode === 'staff') {
+    head.innerHTML = `
+      <th>Mã NV</th><th>Tên NV</th>
+      <th>Số ngày</th>
+      <th>HC</th><th>OT ngày</th><th>OT đêm</th>
+      <th>CT ngày</th><th>CT đêm</th><th>Lễ ngày</th><th>Lễ đêm</th>
+      <th>Tổng giờ</th><th>Tổng hệ số</th>
+      <th>CT1</th><th>CT2</th><th>Di chuyển</th>
+      <th>Giờ SCL</th><th>Công SCL</th>
+      <th>Giờ ĐTXD</th><th>Công ĐTXD</th>
+      <th>Nghỉ phép</th><th>Đi học</th><th>Chi tiết</th><th>Ghi chú</th>`;
+  } else {
+    head.innerHTML = `
+      <th>Mã NV</th><th>Tên NV</th><th>Ngày</th>
+      <th>HC</th><th>OT ngày</th><th>OT đêm</th>
+      <th>CT ngày</th><th>CT đêm</th><th>Lễ ngày</th><th>Lễ đêm</th>
+      <th>Tổng giờ</th><th>Tổng hệ số</th>
+      <th>CT1</th><th>CT2</th><th>Di chuyển</th>
+      <th>Giờ SCL</th><th>Công SCL</th>
+      <th>Giờ ĐTXD</th><th>Công ĐTXD</th>
+      <th>Trạng thái</th><th>Chi tiết</th><th>Ghi chú</th>`;
+  }
+}
 
-        const btn = document.getElementById('btnSubmit');
-        btn.disabled = true;
-        btn.innerHTML = "⏳ Đang xử lý...";
+function renderTable() {
+  const mode = document.querySelector('input[name="viewMode"]:checked').value;
+  renderTableHead(mode);
 
-        const payload = {
-            dsNhanVien: dsDuocChon,
-            ngayLamViec: document.getElementById('ngayLamViec').value,
-            loaiCongTac: document.getElementById('loaiCongTac').value,
-            tram: document.getElementById('tram').value,
-            batDau: document.getElementById('batDau').value,
-            ketThuc: document.getElementById('ketThuc').value,
-            tgDiChuyen: document.getElementById('tgDiChuyen').value
-        };
+  const tbody = document.getElementById('tableBody');
+  if (!cachedData.length) {
+    tbody.innerHTML = '<tr><td colspan="30" class="text-center">Không có dữ liệu</td></tr>';
+    document.getElementById('tableTitle').textContent = 'Kết quả: 0 dòng';
+    return;
+  }
 
-        fetch(WEB_APP_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(data => {
-            alert(data.message);
-            btn.disabled = false;
-            btn.innerHTML = "💾 Lưu Dữ Liệu Chấm Công";
-            nhanVienChoices.removeActiveItems(); // Xóa chip đã chọn
-            document.getElementById('timeForm').reset();
-        })
-        .catch(err => { alert("Lỗi mạng!"); btn.disabled = false; btn.innerHTML = "💾 Lưu Dữ Liệu"; });
+  if (mode === 'staff') {
+    renderAggregate(tbody);
+  } else {
+    renderDetail(tbody);
+  }
+}
+
+/* -------- Chi tiết theo ngày -------- */
+function renderDetail(tbody) {
+  document.getElementById('tableTitle').textContent = 'Kết quả: ' + cachedData.length + ' dòng';
+  tbody.innerHTML = cachedData.map(r => {
+    const ot = (r.OT_DAY||0)+(r.OT_NIGHT||0)+(r.WE_DAY||0)+(r.WE_NIGHT||0)+(r.HOL_DAY||0)+(r.HOL_NIGHT||0);
+    const cls = ot > 4 ? 'warn-row' : '';
+    const detailStr = formatDetail(r.details);
+    return `<tr class="${cls}">
+      <td>${r.staffId}</td>
+      <td class="fw-bold">${r.staffName}</td>
+      <td>${r.date}</td>
+      <td class="cell-hc">${num(r.HC)}</td>
+      <td class="cell-ot">${num(r.OT_DAY)}</td>
+      <td class="cell-night">${num(r.OT_NIGHT)}</td>
+      <td class="cell-weekend">${num(r.WE_DAY)}</td>
+      <td class="cell-weekend">${num(r.WE_NIGHT)}</td>
+      <td class="cell-holiday">${num(r.HOL_DAY)}</td>
+      <td class="cell-holiday">${num(r.HOL_NIGHT)}</td>
+      <td class="fw-bold">${num(r.totalH)}</td>
+      <td class="fw-bold text-success">${num(r.totalCoef)}</td>
+      <td>${r.ct1||''}</td>
+      <td>${r.ct2||''}</td>
+      <td>${num(r.travel)}</td>
+      <td>${num(r.gioSCL)}</td>
+      <td class="fw-bold text-primary">${r.congSCL||''}</td>
+      <td>${num(r.gioDTXD)}</td>
+      <td class="fw-bold text-primary">${r.congDTXD||''}</td>
+      <td>${r.leaveType ? '<span class="badge bg-secondary">'+r.leaveType+'</span>' : ''}</td>
+      <td style="font-size:11px">${detailStr}</td>
+      <td style="font-size:11px">${r.notes||''}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* -------- Tổng hợp theo nhân viên -------- */
+function renderAggregate(tbody) {
+  const agg = {};
+  cachedData.forEach(r => {
+    if (!agg[r.staffId]) agg[r.staffId] = {
+      staffId: r.staffId, staffName: r.staffName,
+      days: 0, HC:0, OT_DAY:0, OT_NIGHT:0, WE_DAY:0, WE_NIGHT:0, HOL_DAY:0, HOL_NIGHT:0,
+      totalH:0, totalCoef:0, ct1:0, ct2:0, travel:0,
+      gioSCL:0, congSCL:0, gioDTXD:0, congDTXD:0,
+      P:0, H:0, NGHIBU:0, DIEUDUONG:0, THAISAN:0, OM:0, KHAC:0,
+      details: {}, notes: []
+    };
+    const o = agg[r.staffId];
+    o.days++;
+    ['HC','OT_DAY','OT_NIGHT','WE_DAY','WE_NIGHT','HOL_DAY','HOL_NIGHT','totalH','totalCoef','travel','gioSCL','gioDTXD']
+      .forEach(k => o[k] += (r[k] || 0));
+    o.ct1 += (r.ct1||0); o.ct2 += (r.ct2||0);
+    o.congSCL += (r.congSCL||0); o.congDTXD += (r.congDTXD||0);
+    ['P','H','NGHIBU','DIEUDUONG','THAISAN','OM','KHAC'].forEach(k => o[k] += (r.leaveType===k?1:0));
+    Object.keys(r.details||{}).forEach(k => { o.details[k] = (o.details[k]||0) + r.details[k]; });
+    if (r.notes) o.notes.push(r.notes);
+  });
+
+  const rows = Object.values(agg).sort((a,b) => a.staffId.localeCompare(b.staffId));
+  document.getElementById('tableTitle').textContent = 'Tổng hợp: ' + rows.length + ' nhân viên';
+
+  tbody.innerHTML = rows.map(o => {
+    const ot = o.OT_DAY+o.OT_NIGHT+o.WE_DAY+o.WE_NIGHT+o.HOL_DAY+o.HOL_NIGHT;
+    const cls = ot > 40 ? 'warn-row' : '';
+    return `<tr class="${cls}">
+      <td>${o.staffId}</td>
+      <td class="fw-bold">${o.staffName}</td>
+      <td>${o.days}</td>
+      <td class="cell-hc">${num(o.HC)}</td>
+      <td class="cell-ot">${num(o.OT_DAY)}</td>
+      <td class="cell-night">${num(o.OT_NIGHT)}</td>
+      <td class="cell-weekend">${num(o.WE_DAY)}</td>
+      <td class="cell-weekend">${num(o.WE_NIGHT)}</td>
+      <td class="cell-holiday">${num(o.HOL_DAY)}</td>
+      <td class="cell-holiday">${num(o.HOL_NIGHT)}</td>
+      <td class="fw-bold">${num(o.totalH)}</td>
+      <td class="fw-bold text-success">${num(o.totalCoef)}</td>
+      <td>${o.ct1||''}</td>
+      <td>${o.ct2||''}</td>
+      <td>${num(o.travel)}</td>
+      <td>${num(o.gioSCL)}</td>
+      <td class="fw-bold text-primary">${o.congSCL||''}</td>
+      <td>${num(o.gioDTXD)}</td>
+      <td class="fw-bold text-primary">${o.congDTXD||''}</td>
+      <td>${o.P?o.P+'P ':''}${o.DIEUDUONG?o.DIEUDUONG+'ĐD ':''}${o.THAISAN?o.THAISAN+'TS ':''}${o.OM?o.OM+'Ố ':''}${o.NGHIBU?o.NGHIBU+'NB ':''}</td>
+      <td>${o.H?o.H+'H':''}</td>
+      <td style="font-size:11px">${formatDetail(o.details)}</td>
+      <td style="font-size:11px">${o.notes.join('; ')}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* -------- Cảnh báo -------- */
+function renderWarnings() {
+  const box = document.getElementById('warningBox');
+  const warnDay = cachedData.filter(r => {
+    const ot = (r.OT_DAY||0)+(r.OT_NIGHT||0)+(r.WE_DAY||0)+(r.WE_NIGHT||0)+(r.HOL_DAY||0)+(r.HOL_NIGHT||0);
+    return ot > 4;
+  });
+  const agg = {};
+  cachedData.forEach(r => {
+    const ot = (r.OT_DAY||0)+(r.OT_NIGHT||0)+(r.WE_DAY||0)+(r.WE_NIGHT||0)+(r.HOL_DAY||0)+(r.HOL_NIGHT||0);
+    agg[r.staffId] = (agg[r.staffId]||0) + ot;
+  });
+  const warnTotal = Object.keys(agg).filter(k => agg[k] > 40);
+
+  let html = '';
+  if (warnDay.length) {
+    html += `<div class="alert alert-warning py-2 mb-2">
+      <b>⚠️ ${warnDay.length} ngày có OT &gt; 4h:</b> ` +
+      warnDay.slice(0,5).map(r => `${r.staffName} (${r.date})`).join(', ') +
+      (warnDay.length>5 ? ` ... +${warnDay.length-5}` : '') + '</div>';
+  }
+  if (warnTotal.length) {
+    html += `<div class="alert alert-danger py-2 mb-2">
+      <b>🚨 ${warnTotal.length} NV có tổng OT &gt; 40h/kỳ:</b> ` +
+      warnTotal.map(k => {
+        const name = (cachedData.find(r => r.staffId === k) || {}).staffName || k;
+        return `${name} (${agg[k].toFixed(1)}h)`;
+      }).join(', ') + '</div>';
+  }
+  box.innerHTML = html;
+}
+
+/* -------- Utils -------- */
+function num(x) { return (x==null||x==='')?'':(Math.round(x*100)/100); }
+function formatDetail(details) {
+  if (!details) return '';
+  return Object.keys(details).filter(k => details[k] > 0)
+    .map(k => k + '=' + num(details[k]) + 'h').join(' | ');
+}
+
+/* ==========================================================
+   XUẤT EXCEL
+   ========================================================== */
+function exportToExcelClient() {
+  if (!cachedData.length) { alert('Chưa có dữ liệu!'); return; }
+  const mode = document.querySelector('input[name="viewMode"]:checked').value;
+
+  let data;
+  if (mode === 'staff') {
+    // Tổng hợp theo NV từ cachedData
+    const agg = {};
+    cachedData.forEach(r => {
+      if (!agg[r.staffId]) agg[r.staffId] = {
+        staffId: r.staffId, staffName: r.staffName,
+        days: 0, HC:0, OT_DAY:0, OT_NIGHT:0, WE_DAY:0, WE_NIGHT:0, HOL_DAY:0, HOL_NIGHT:0,
+        totalH:0, totalCoef:0, ct1:0, ct2:0, travel:0,
+        gioSCL:0, congSCL:0, gioDTXD:0, congDTXD:0, details:{}
+      };
+      const o = agg[r.staffId];
+      o.days++;
+      ['HC','OT_DAY','OT_NIGHT','WE_DAY','WE_NIGHT','HOL_DAY','HOL_NIGHT','totalH','totalCoef','travel','gioSCL','gioDTXD','ct1','ct2','congSCL','congDTXD']
+        .forEach(k => o[k] += (r[k]||0));
+      Object.keys(r.details||{}).forEach(k => o.details[k]=(o.details[k]||0)+r.details[k]);
     });
+    data = Object.values(agg).map(o => ({
+      'Mã NV': o.staffId, 'Tên NV': o.staffName, 'Số ngày': o.days,
+      'HC': num(o.HC), 'OT ngày': num(o.OT_DAY), 'OT đêm': num(o.OT_NIGHT),
+      'CT ngày': num(o.WE_DAY), 'CT đêm': num(o.WE_NIGHT),
+      'Lễ ngày': num(o.HOL_DAY), 'Lễ đêm': num(o.HOL_NIGHT),
+      'Tổng giờ': num(o.totalH), 'Tổng hệ số': num(o.totalCoef),
+      'CT1': o.ct1, 'CT2': o.ct2, 'Di chuyển': num(o.travel),
+      'Giờ SCL': num(o.gioSCL), 'Công SCL': o.congSCL,
+      'Giờ ĐTXD': num(o.gioDTXD), 'Công ĐTXD': o.congDTXD,
+      'Chi tiết': formatDetail(o.details)
+    }));
+  } else {
+    data = cachedData.map(r => ({
+      'Mã NV': r.staffId, 'Tên NV': r.staffName, 'Ngày': r.date,
+      'HC': num(r.HC), 'OT ngày': num(r.OT_DAY), 'OT đêm': num(r.OT_NIGHT),
+      'CT ngày': num(r.WE_DAY), 'CT đêm': num(r.WE_NIGHT),
+      'Lễ ngày': num(r.HOL_DAY), 'Lễ đêm': num(r.HOL_NIGHT),
+      'Tổng giờ': num(r.totalH), 'Tổng hệ số': num(r.totalCoef),
+      'CT1': r.ct1, 'CT2': r.ct2, 'Di chuyển': num(r.travel),
+      'Giờ SCL': num(r.gioSCL), 'Công SCL': r.congSCL,
+      'Giờ ĐTXD': num(r.gioDTXD), 'Công ĐTXD': r.congDTXD,
+      'Trạng thái': r.leaveType || '',
+      'Chi tiết': formatDetail(r.details),
+      'Ghi chú': r.notes || ''
+    }));
+  }
 
-    // 3. Tải dữ liệu lên bảng Thống kê
-    let cachedData = []; // Lưu để xuất Excel
-    function loadData() {
-        document.getElementById('tableBody').innerHTML = '<tr><td colspan="8" class="text-center text-primary">Đang tải dữ liệu từ server...</td></tr>';
-        
-        fetch(WEB_APP_URL)
-        .then(res => res.json())
-        .then(data => {
-            cachedData = data;
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
-            
-            if(data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center">Chưa có dữ liệu</td></tr>';
-                return;
-            }
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, mode === 'staff' ? 'TongHopNV' : 'ChiTiet');
+  XLSX.writeFile(wb, 'ThongKe_' + mode + '_' + Date.now() + '.xlsx');
+}
 
-            data.forEach(row => {
-                let ngay = new Date(row["Ngày"]).toLocaleDateString('vi-VN');
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${ngay}</td>
-                        <td class="fw-bold">${row["Nhân sự"]}</td>
-                        <td><span class="badge bg-secondary">${row["Loại công tác"]}</span></td>
-                        <td>${row["Trạm"]}</td>
-                        <td>${row["HC (h)"]}</td>
-                        <td class="text-danger">${row["NG Ngày (h)"]}</td>
-                        <td class="text-danger">${row["NG Đêm (h)"]}</td>
-                        <td class="fw-bold text-success">${row["Hệ số quy đổi"]}</td>
-                    </tr>
-                `;
-            });
-        }).catch(err => alert("Lỗi khi tải dữ liệu!"));
-    }
+function exportFromServer() {
+  const from = document.getElementById('fFrom').value;
+  const to = document.getElementById('fTo').value;
+  if (!from || !to) { alert('Chọn khoảng ngày!'); return; }
 
-    // 4. Xuất Excel sử dụng SheetJS
-    function exportToExcel() {
-        if(cachedData.length === 0) {
-            alert("Chưa có dữ liệu để xuất!"); return;
-        }
-        // Tạo Worksheet từ JSON data
-        const ws = XLSX.utils.json_to_sheet(cachedData);
-        // Tạo Workbook
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "ThongKeChamCong");
-        // Tải xuống file Excel
-        XLSX.writeFile(wb, "Thong_Ke_Cong_Tac.xlsx");
-    }
+  const types = fLoaiChoices.getValue(true);
+  const staffIds = fNhanVienChoices.getValue(true);
+  const codes = fMaCTChoices.getValue(true);
+
+  const params = new URLSearchParams({
+    action: 'export', from, to,
+    types: types.join(','), staffIds: staffIds.join(','), codes: codes.join(',')
+  });
+
+  fetch(WEB_APP_URL + '?' + params.toString())
+    .then(r => r.json())
+    .then(d => {
+      if (d.error) { alert('Lỗi: ' + d.error); return; }
+      if (d.url) window.open(d.url, '_blank');
+    })
+    .catch(err => alert('Lỗi xuất: ' + err.message));
+}
+
+/* ==========================================================
+   CẤU HÌNH NGÀY LỄ
+   ========================================================== */
+function addHoliday() {
+  const date = document.getElementById('newHolidayDate').value;
+  const name = document.getElementById('newHolidayName').value.trim();
+  if (!date || !name) { alert('Nhập ngày và tên lễ!'); return; }
+  fetch(WEB_APP_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'addHoliday', date, name })
+  }).then(r => r.json()).then(d => {
+    if (d.error) alert(d.error); else { alert(d.message || 'Đã thêm'); loadConfig(); }
+  });
+}
+
+function deleteHoliday(date) {
+  if (!confirm('Xóa ngày lễ ' + date + '?')) return;
+  fetch(WEB_APP_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'deleteHoliday', date })
+  }).then(r => r.json()).then(d => {
+    if (d.error) alert(d.error); else { alert(d.message || 'Đã xóa'); loadConfig(); }
+  });
+}
 </script>
 </body>
 </html>
