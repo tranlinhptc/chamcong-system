@@ -10,7 +10,6 @@
     .card { box-shadow:0 4px 12px rgba(0,0,0,.1); border-radius:12px; border:none; }
     .nav-tabs .nav-link.active { font-weight:bold; color:#0d6efd; border-bottom:3px solid #0d6efd; }
 
-    /* Grid 4x6 cho 24 nhân sự, responsive về 2 cột trên điện thoại */
     .emp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
     @media (max-width: 768px) { .emp-grid { grid-template-columns: repeat(2, 1fr); } }
     .emp-chip {
@@ -26,12 +25,10 @@
     .emp-chip.checked span { color:#0d6efd; font-weight:700; }
     .emp-chip span { overflow: hidden; text-overflow: ellipsis; }
 
-    /* Bảng tháng */
     .table-responsive { max-height: 72vh; overflow: auto; border: 1px solid #dee2e6; border-radius: 6px;}
     #monthTable { font-size: 11.5px; margin-bottom: 0;}
     #monthTable th, #monthTable td { padding: 4px 5px; white-space: nowrap; text-align: center; vertical-align: middle; }
     
-    /* Cố định cột Mã và Tên */
     #monthTable th:first-child, #monthTable td:first-child,
     #monthTable th:nth-child(2), #monthTable td:nth-child(2) {
       position: sticky; background: #f8f9fa; z-index: 5;
@@ -43,7 +40,6 @@
     thead { position: sticky; top: 0; z-index: 6; }
     .col-day { min-width: 42px; max-width: 60px; }
     
-    /* Màu sắc */
     .cell-t7 { background: #fff4e6 !important; }
     .cell-cn { background: #ffe0e0 !important; }
     .cell-le { background: #ffd6d6 !important; font-weight: 600; }
@@ -67,7 +63,6 @@
   </ul>
 
   <div class="tab-content">
-    <!-- TAB NHẬP LIỆU -->
     <div class="tab-pane fade show active" id="nhap">
       <div class="card p-3 mx-auto" style="max-width: 900px;">
         <form id="frm" novalidate>
@@ -111,24 +106,14 @@
               <input class="form-control" id="hangMuc" placeholder="VD: Thay cuộn cắt">
             </div>
           </div>
-          
           <div class="row" id="groupTram">
-            <div class="col-md-8 mb-3">
-              <label class="form-label fw-bold">Trạm:</label>
-              <select class="form-select" id="tram"></select>
-            </div>
+            <div class="col-md-8 mb-3"><label class="form-label fw-bold">Trạm:</label><select class="form-select" id="tram"></select></div>
             <div class="col-md-4 mb-3">
               <label class="form-label fw-bold">CT1 / CT2:</label>
-              <select class="form-select" id="ctType">
-                <option value="">Tự động</option>
-                <option value="CT1">CT1</option>
-                <option value="CT2">CT2</option>
-              </select>
+              <select class="form-select" id="ctType"><option value="">Tự động</option><option value="CT1">CT1</option><option value="CT2">CT2</option></select>
               <small class="text-muted d-none" id="baoLocHint">⚠️ Bảo Lộc: không tính CT</small>
             </div>
           </div>
-
-          <!-- CÔNG TÁC & DI CHUYỂN -->
           <div id="sectionWork" class="border rounded p-3 mb-3 bg-light">
             <h6 class="fw-bold text-primary mb-3">🛠️ Công tác & Di chuyển</h6>
             <div class="row">
@@ -147,8 +132,6 @@
               <div class="col-md-6 mb-2"><input type="datetime-local" class="form-control" id="dcVeDen"></div>
             </div>
           </div>
-
-          <!-- NGHỈ PHÉP -->
           <div id="sectionLeave" class="border rounded p-3 mb-3 bg-light d-none">
             <h6 class="fw-bold text-warning mb-3">🌴 Thời gian nghỉ (chỉ chọn ngày)</h6>
             <div class="row">
@@ -161,7 +144,6 @@
               </div>
             </div>
           </div>
-
           <div class="mb-3"><label class="form-label fw-bold">Ghi chú:</label><input class="form-control" id="ghiChu"></div>
           <div class="text-center">
             <button type="submit" class="btn btn-primary btn-lg px-5" id="btnSave">💾 Lưu</button>
@@ -172,11 +154,11 @@
       </div>
     </div>
 
-    <!-- TAB BẢNG THÁNG -->
     <div class="tab-pane fade" id="thang">
       <div class="card p-3">
         <div class="row g-2 align-items-end mb-3">
           <div class="col-6 col-md-2"><label class="form-label">Tháng</label><input type="month" class="form-control" id="fMonth"></div>
+          
           <div class="col-12 col-md-3 mt-2 mt-md-0">
             <label class="form-label text-primary fw-bold">Chế độ xem</label>
             <select class="form-select" id="fViewType">
@@ -187,6 +169,7 @@
               <option value="DC">Di Chuyển</option>
             </select>
           </div>
+
           <div class="col-12 col-md-3 mt-2 mt-md-0">
             <label class="form-label">Mã công tác (nếu có)</label>
             <select class="form-select" id="fViewCode">
@@ -198,6 +181,7 @@
               <optgroup label="— Mã cụ thể —" id="optCodes"></optgroup>
             </select>
           </div>
+          
           <div class="col-6 col-md-2 mt-2 mt-md-0"><button class="btn btn-primary w-100" onclick="loadMonth()">🔍 Xem</button></div>
           <div class="col-12 col-md-2 mt-2 mt-md-0"><button class="btn btn-success w-100" onclick="exportMonth()">📊 Xuất Excel</button></div>
         </div>
@@ -205,13 +189,12 @@
         <div class="table-responsive">
           <table class="table table-bordered table-sm mb-0" id="monthTable">
             <thead class="table-dark" id="monthHead"></thead>
-            <tbody id="monthBody"><tr><td class="text-center text-muted">Chọn tháng và bấm "Xem"</td></tr></tbody>
+            <tbody id="monthBody"><tr><td class="text-center text-muted">Đang tải...</td></tr></tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- TAB CẤU HÌNH -->
     <div class="tab-pane fade" id="caidat">
       <div class="card p-3">
         <h5 class="fw-bold">📅 Ngày lễ Tết</h5>
@@ -233,7 +216,7 @@
 const API = "https://script.google.com/macros/s/AKfycbxeQrd6TVvdOogxzWUX5_XYHyvwSR4YeEq8-khAaK-_z4EMBEdXL2SifpDxJRMLC1Lt/exec"; 
 
 const LEAVE_TYPES = ['P','H','NGHIBU','DIEUDUONG','THAISAN','OM','KHAC'];
-const LS_KEY = 'timesheet_form_cache_v3';
+const LS_KEY = 'timesheet_form_cache_v4';
 let CONFIG = { staff:[], stations:[], holidays:[], codes:[] };
 let cachedMonth = null;
 
@@ -262,6 +245,9 @@ function loadConfig() {
     renderCodes(cfg.codes || []);
     renderHolidays(cfg.holidays || []);
     try { restoreFormCache(); } catch (e) { localStorage.removeItem(LS_KEY); }
+    
+    // Tự động load tháng hiện tại khi mở app
+    loadMonth(); 
   }).catch(err => alert('Lỗi tải cấu hình:\n' + err.message));
 }
 
@@ -413,7 +399,9 @@ function loadMonth() {
 
 function renderMonth(data) {
   const { year, month, days, holidays, staffRows } = data;
+  const viewType = document.getElementById('fViewType').value;
   const head = document.getElementById('monthHead'); const body = document.getElementById('monthBody');
+  
   let h = '<tr><th style="min-width:50px">Mã</th><th style="min-width:70px">Tên</th>';
   for (let d = 1; d <= days; d++) {
     const dt = new Date(year, month-1, d); const dow = dt.getDay(); const iso = dt.toISOString().slice(0,10);
@@ -421,15 +409,23 @@ function renderMonth(data) {
     if (holidays.includes(iso)) { cls += ' cell-le'; label = d + '🎉'; } else if (dow === 0) { cls += ' cell-cn'; label = d + 'CN'; } else if (dow === 6) { cls += ' cell-t7'; label = d + 'T7'; }
     h += `<th class="${cls}">${label}</th>`;
   }
+
+  // HIỂN THỊ CỘT TỔNG THEO CHẾ ĐỘ LỌC
+  if (viewType === 'CATEGORY' || viewType === 'HC') {
+    h += `<th class="total-hdr">T.Ngày</th><th class="total-hdr">T.Đêm</th><th class="total-hdr">OT.Ngày</th><th class="total-hdr">OT.Đêm</th><th class="total-hdr">T.HS</th>`;
+  } else if (viewType === 'OT_DAY') {
+    h += `<th class="total-hdr">T.Ngày</th><th class="total-hdr">OT.Ngày</th><th class="total-hdr">T.HS</th>`;
+  } else if (viewType === 'OT_NIGHT') {
+    h += `<th class="total-hdr">T.Đêm</th><th class="total-hdr">OT.Đêm</th><th class="total-hdr">T.HS</th>`;
+  } else if (viewType === 'DC') {
+    h += `<th class="total-hdr">T.DC</th>`;
+  }
+
+  if (viewType === 'CATEGORY' || viewType === 'HC') {
+    h += `<th class="total-hdr">CT1</th><th class="total-hdr">CT2</th>`;
+  }
+  
   h += `
-    <th class="total-hdr">T.Ngày</th>
-    <th class="total-hdr">T.Đêm</th>
-    <th class="total-hdr">OT.Ngày</th>
-    <th class="total-hdr">OT.Đêm</th>
-    <th class="total-hdr">T.HS</th>
-    <th class="total-hdr">CT1</th>
-    <th class="total-hdr">CT2</th>
-    <th class="total-hdr">T.DC</th>
     <th class="total-hdr" style="background:#f8d7da; color:#b02a37">Nghỉ Bù</th>
     <th class="total-hdr" style="background:#f8d7da; color:#b02a37">Quỹ Cũ</th>
     <th class="total-hdr" style="background:#f8d7da; color:#b02a37">Quỹ Mới</th>`;
@@ -443,15 +439,32 @@ function renderMonth(data) {
       const cls = cell ? (isLeave ? 'cell-leave' : 'cell-work') : '';
       tr += `<td class="${cls}">${cell}</td>`;
     }
+
+    // ĐIỀN SỐ LIỆU CỘT TỔNG TƯƠNG ỨNG
+    if (viewType === 'CATEGORY' || viewType === 'HC') {
+      tr += `<td class="total-col">${r.totalDay.toFixed(1)}</td>
+             <td class="total-col">${r.totalNight.toFixed(1)}</td>
+             <td class="total-col">${r.otDay.toFixed(1)}</td>
+             <td class="total-col">${r.otNight.toFixed(1)}</td>
+             <td class="total-col">${r.totalCoef.toFixed(2)}</td>`;
+    } else if (viewType === 'OT_DAY') {
+      tr += `<td class="total-col">${r.totalDay.toFixed(1)}</td>
+             <td class="total-col">${r.otDay.toFixed(1)}</td>
+             <td class="total-col">${r.totalCoef.toFixed(2)}</td>`;
+    } else if (viewType === 'OT_NIGHT') {
+      tr += `<td class="total-col">${r.totalNight.toFixed(1)}</td>
+             <td class="total-col">${r.otNight.toFixed(1)}</td>
+             <td class="total-col">${r.totalCoef.toFixed(2)}</td>`;
+    } else if (viewType === 'DC') {
+      tr += `<td class="total-col">${r.travel.toFixed(1)}</td>`;
+    }
+
+    if (viewType === 'CATEGORY' || viewType === 'HC') {
+      tr += `<td class="total-col">${r.ct1||''}</td>
+             <td class="total-col">${r.ct2||''}</td>`;
+    }
+
     tr += `
-      <td class="total-col">${r.totalDay.toFixed(1)}</td>
-      <td class="total-col">${r.totalNight.toFixed(1)}</td>
-      <td class="total-col">${r.otDay.toFixed(1)}</td>
-      <td class="total-col">${r.otNight.toFixed(1)}</td>
-      <td class="total-col">${r.totalCoef.toFixed(2)}</td>
-      <td class="total-col">${r.ct1||''}</td>
-      <td class="total-col">${r.ct2||''}</td>
-      <td class="total-col">${r.travel.toFixed(1)}</td>
       <td class="quy-col text-danger">${r.nghiBuThangNay ? '-'+r.nghiBuThangNay.toFixed(1)+'h' : ''}</td>
       <td class="quy-col">${r.quyThangTruocConLai.toFixed(1)}h</td>
       <td class="quy-col">${r.quyHienTaiConLai.toFixed(1)}h</td>`;
@@ -468,26 +481,33 @@ function renderWarn(data) {
 
 function exportMonth() {
   if (!cachedMonth) { alert('Vui lòng bấm nút "🔍 Xem" để tải dữ liệu trước khi xuất Excel!'); return; }
-  const { year, month, days, holidays, staffRows } = cachedMonth;
+  const { year, month, days, staffRows } = cachedMonth;
+  const viewType = document.getElementById('fViewType').value;
   const headers = ['Mã NV', 'Tên ngắn'];
   for (let d = 1; d <= days; d++) headers.push(String(d));
-  headers.push('Tổng Ngày', 'Tổng Đêm', 'OT Ngày', 'OT Đêm', 'Tổng HS', 'CT1', 'CT2', 'Tổng DC', 'Nghỉ Bù', 'Quỹ Cũ', 'Quỹ Mới');
+  
+  if (viewType === 'CATEGORY' || viewType === 'HC') headers.push('T.Ngày', 'T.Đêm', 'OT Ngày', 'OT Đêm', 'T.HS', 'CT1', 'CT2');
+  else if (viewType === 'OT_DAY') headers.push('T.Ngày', 'OT Ngày', 'T.HS');
+  else if (viewType === 'OT_NIGHT') headers.push('T.Đêm', 'OT Đêm', 'T.HS');
+  else if (viewType === 'DC') headers.push('T.DC');
+  headers.push('Nghỉ Bù', 'Quỹ Cũ', 'Quỹ Mới');
 
   const aoa = [headers];
   staffRows.forEach(r => {
-    const row = [r.shortName];
+    const row = [r.staffId, r.shortName];
     for (let d = 1; d <= days; d++) row.push(r.cells[d] || '');
-    row.push(
-      r.totalDay.toFixed(1), r.totalNight.toFixed(1), r.otDay.toFixed(1), r.otNight.toFixed(1), r.totalCoef.toFixed(2), r.ct1 || '', r.ct2 || '', r.travel.toFixed(1),
-      r.nghiBuThangNay ? '-'+r.nghiBuThangNay.toFixed(1) : '', r.quyThangTruocConLai.toFixed(1), r.quyHienTaiConLai.toFixed(1)
-    );
+    
+    if (viewType === 'CATEGORY' || viewType === 'HC') row.push(r.totalDay.toFixed(1), r.totalNight.toFixed(1), r.otDay.toFixed(1), r.otNight.toFixed(1), r.totalCoef.toFixed(2), r.ct1 || '', r.ct2 || '');
+    else if (viewType === 'OT_DAY') row.push(r.totalDay.toFixed(1), r.otDay.toFixed(1), r.totalCoef.toFixed(2));
+    else if (viewType === 'OT_NIGHT') row.push(r.totalNight.toFixed(1), r.otNight.toFixed(1), r.totalCoef.toFixed(2));
+    else if (viewType === 'DC') row.push(r.travel.toFixed(1));
+
+    row.push(r.nghiBuThangNay ? '-'+r.nghiBuThangNay.toFixed(1) : '', r.quyThangTruocConLai.toFixed(1), r.quyHienTaiConLai.toFixed(1));
     aoa.push(row);
   });
 
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'ThongKeThang');
-  const wscols = [{wch:8}, {wch:15}]; for(let i=0; i<days; i++) wscols.push({wch:7}); for(let i=0; i<11; i++) wscols.push({wch:10});
-  ws['!cols'] = wscols;
   XLSX.writeFile(wb, `BangChamCong_${year}_${String(month).padStart(2,'0')}.xlsx`);
 }
 
