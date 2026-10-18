@@ -475,7 +475,7 @@ function exportMonth() {
 
   const aoa = [headers];
   staffRows.forEach(r => {
-    const row = [r.staffId, r.shortName];
+    const row = [r.shortName];
     for (let d = 1; d <= days; d++) row.push(r.cells[d] || '');
     row.push(
       r.totalDay.toFixed(1), r.totalNight.toFixed(1), r.otDay.toFixed(1), r.otNight.toFixed(1), r.totalCoef.toFixed(2), r.ct1 || '', r.ct2 || '', r.travel.toFixed(1),
