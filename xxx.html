@@ -157,8 +157,21 @@
       <div class="card p-3">
         <div class="row g-2 align-items-end mb-3">
           <div class="col-6 col-md-2"><label class="form-label">Tháng</label><input type="month" class="form-control" id="fMonth"></div>
-          <div class="col-12 col-md-4 mt-2 mt-md-0">
-            <label class="form-label">Xem theo mã</label>
+          
+          <!-- BỔ SUNG CHỌN CHẾ ĐỘ XEM TẠI ĐÂY -->
+          <div class="col-12 col-md-3 mt-2 mt-md-0">
+            <label class="form-label text-primary fw-bold">Chế độ xem</label>
+            <select class="form-select" id="fViewType">
+              <option value="CATEGORY">Theo Mã Công Tác</option>
+              <option value="OT_DAY">Thêm giờ Ban Ngày</option>
+              <option value="OT_NIGHT">Thêm giờ Ban Đêm</option>
+              <option value="HC">Giờ Hành Chính</option>
+              <option value="DC">Di Chuyển</option>
+            </select>
+          </div>
+
+          <div class="col-12 col-md-3 mt-2 mt-md-0">
+            <label class="form-label">Mã công tác (nếu có)</label>
             <select class="form-select" id="fViewCode">
               <option value="ALL">Tất cả (Tổng hợp)</option>
               <option value="SANXUAT">Sản xuất (SX)</option>
@@ -168,8 +181,9 @@
               <optgroup label="— Mã cụ thể —" id="optCodes"></optgroup>
             </select>
           </div>
+          
           <div class="col-6 col-md-2 mt-2 mt-md-0"><button class="btn btn-primary w-100" onclick="loadMonth()">🔍 Xem</button></div>
-          <div class="col-12 col-md-4 mt-2 mt-md-0"><button class="btn btn-success w-100" onclick="exportMonth()">📊 Xuất Excel tháng</button></div>
+          <div class="col-12 col-md-2 mt-2 mt-md-0"><button class="btn btn-success w-100" onclick="exportMonth()">📊 Xuất Excel</button></div>
         </div>
         <div id="warnBox"></div>
         <div class="table-responsive">
@@ -198,29 +212,19 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-// ⚠️ DÁN LẠI URL /exec MỚI NHẤT VÀO ĐÂY
-const API = "https://script.google.com/macros/s/AKfycbxeQrd6TVvdOogxzWUX5_XYHyvwSR4YeEq8-khAaK-_z4EMBEdXL2SifpDxJRMLC1Lt/exec"; 
-
+const API = "https://script.google.com/macros/library/d/1s2QB9rd4cJupOyVGl57YB9RSZoTCUslOvnoqtOaK3q6tmqL2PKl017kX/9"; // <-- Dán URL Web App vào đây
 const LEAVE_TYPES = ['P','H','NGHIBU','DIEUDUONG','THAISAN','OM','KHAC'];
 const LS_KEY = 'timesheet_form_cache_v3';
 let CONFIG = { staff:[], stations:[], holidays:[], codes:[] };
 let cachedMonth = null;
 
-// HÀM FETCH ĐƯỢC TỐI ƯU CHO IPHONE SAFARI
 function apiFetch(url, options = {}) {
-  options.redirect = 'follow'; // Xử lý chuyển hướng của Google
-  if (options.body) {
-    options.headers = { 'Content-Type': 'text/plain;charset=utf-8' };
-  }
+  options.redirect = 'follow';
+  if (options.body) options.headers = { 'Content-Type': 'text/plain;charset=utf-8' };
   return fetch(url, options).then(async res => {
     if (!res.ok) throw new Error('Lỗi mạng HTTP ' + res.status);
     const text = await res.text();
-    try {
-      return JSON.parse(text);
-    } catch (e) {
-      console.error("Dữ liệu lỗi:", text);
-      throw new Error("Máy chủ không trả về JSON. Hãy chắc chắn bạn đã Deploy với quyền 'Anyone' (Bất kỳ ai).");
-    }
+    try { return JSON.parse(text); } catch (e) { throw new Error("API không trả về JSON."); }
   });
 }
 
@@ -231,16 +235,15 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function loadConfig() {
-  apiFetch(API + '?action=getConfig')
-    .then(cfg => {
-      if (cfg.error) throw new Error(cfg.error);
-      CONFIG = cfg;
-      renderEmpGrid(cfg.staff || []);
-      renderStations(cfg.stations || []);
-      renderCodes(cfg.codes || []);
-      renderHolidays(cfg.holidays || []);
-      try { restoreFormCache(); } catch (e) { localStorage.removeItem(LS_KEY); }
-    }).catch(err => alert('Lỗi tải cấu hình:\n' + err.message));
+  apiFetch(API + '?action=getConfig').then(cfg => {
+    if (cfg.error) throw new Error(cfg.error);
+    CONFIG = cfg;
+    renderEmpGrid(cfg.staff || []);
+    renderStations(cfg.stations || []);
+    renderCodes(cfg.codes || []);
+    renderHolidays(cfg.holidays || []);
+    try { restoreFormCache(); } catch (e) { localStorage.removeItem(LS_KEY); }
+  }).catch(err => alert('Lỗi tải cấu hình:\n' + err.message));
 }
 
 function renderEmpGrid(staff) {
@@ -375,10 +378,13 @@ function onSubmit(e) {
 function onTabThang() { if (!cachedMonth) loadMonth(); }
 function loadMonth() {
   const m = document.getElementById('fMonth').value; if (!m) { alert('Chọn tháng'); return; }
-  const [year, month] = m.split('-').map(Number); const viewCode = document.getElementById('fViewCode').value;
+  const [year, month] = m.split('-').map(Number); 
+  const viewCode = document.getElementById('fViewCode').value;
+  const viewType = document.getElementById('fViewType').value; // Lấy chế độ xem
+
   document.getElementById('monthBody').innerHTML = '<tr><td class="text-center text-primary">⏳ Đang tải...</td></tr>';
   
-  apiFetch(API + '?' + new URLSearchParams({action:'getMonthData', year, month, viewCode})).then(data => {
+  apiFetch(API + '?' + new URLSearchParams({action:'getMonthData', year, month, viewCode, viewType})).then(data => {
     if (data.error) throw new Error(data.error);
     cachedMonth = data; renderMonth(data); renderWarn(data);
   }).catch(err => {
