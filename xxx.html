@@ -509,7 +509,7 @@ function exportMonth() {
   if (!cachedMonth) { alert('Vui lòng bấm nút "🔍 Xem" để tải dữ liệu trước khi xuất Excel!'); return; }
   const { year, month, days, staffRows } = cachedMonth;
   const viewType = document.getElementById('fViewType').value;
-  const headers = ['Mã NV', 'Tên ngắn'];
+  const headers = ['Mã NV', 'Tên NV'];
   for (let d = 1; d <= days; d++) headers.push(String(d));
   
   if (viewType === 'CATEGORY' || viewType === 'HC') headers.push('T.Ngày', 'T.Đêm', 'OT Ngày', 'OT Đêm', 'T.HS', 'CT1', 'CT2');
