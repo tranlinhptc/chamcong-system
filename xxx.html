@@ -218,7 +218,6 @@ const LS_KEY = 'timesheet_form_cache_v4';
 let CONFIG = { staff:[], stations:[], holidays:[], codes:[] };
 let cachedMonth = null;
 
-// Biến dùng để chống lưu trùng ở Frontend
 let lastSavedData = "";
 let lastSavedTime = 0;
 
@@ -372,7 +371,6 @@ function onSubmit(e) {
     if (!hasValid) { alert('Nhập ít nhất 1 cặp (DC đi / CT / DC về)'); return; }
   }
 
-  // LỚP BẢO VỆ 1: Kiểm tra dữ liệu xem có bấm lưu 2 lần không
   const dataString = JSON.stringify(p);
   if (dataString === lastSavedData && Date.now() - lastSavedTime < 30000) {
     if (!confirm("⚠️ Bạn vừa lưu thông tin giống hệt cách đây vài giây.\nBạn có chắc chắn muốn lưu thêm lần nữa?")) {
@@ -389,18 +387,15 @@ function onSubmit(e) {
     if (d.error) throw new Error(d.error);
     document.getElementById('msg').innerHTML = `<span class="text-success fw-bold">✅ ${d.message}</span>`;
     
-    // LỚP BẢO VỆ 2: Xóa sạch các trường ngày giờ để tránh lưu nhầm lần 2
     ['dcDiTu','dcDiDen','gioBD','gioKT','dcVeTu','dcVeDen','leaveFrom','leaveTo'].forEach(id => {
       document.getElementById(id).value = '';
     });
     
-    // Đánh dấu dữ liệu vừa lưu
     lastSavedData = dataString;
     lastSavedTime = Date.now();
 
   }).catch(err => alert('Lỗi: ' + err.message))
   .finally(() => { 
-    // LỚP BẢO VỆ 3: Đợi 2 giây mới mở lại nút bấm
     setTimeout(() => {
       btn.disabled = false; 
       btn.textContent = '💾 Lưu'; 
@@ -520,7 +515,8 @@ function exportMonth() {
 
   const aoa = [headers];
   staffRows.forEach(r => {
-    const row = [r.staffId, r.shortName];
+    // LẤY TÊN ĐẦY ĐỦ (r.fullName) THAY VÌ TÊN NGẮN
+    const row = [r.staffId, r.fullName];
     for (let d = 1; d <= days; d++) row.push(r.cells[d] || '');
     
     if (viewType === 'CATEGORY' || viewType === 'HC') row.push(r.totalDay.toFixed(1), r.totalNight.toFixed(1), r.otDay.toFixed(1), r.otNight.toFixed(1), r.totalCoef.toFixed(2), r.ct1 || '', r.ct2 || '');
