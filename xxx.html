@@ -212,13 +212,15 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-// ĐÃ CẬP NHẬT LINK EXEC CỦA ANH VÀO ĐÂY
 const API = "https://script.google.com/macros/s/AKfycbxeQrd6TVvdOogxzWUX5_XYHyvwSR4YeEq8-khAaK-_z4EMBEdXL2SifpDxJRMLC1Lt/exec"; 
-
 const LEAVE_TYPES = ['P','H','NGHIBU','DIEUDUONG','THAISAN','OM','KHAC'];
 const LS_KEY = 'timesheet_form_cache_v4';
 let CONFIG = { staff:[], stations:[], holidays:[], codes:[] };
 let cachedMonth = null;
+
+// Biến dùng để chống lưu trùng ở Frontend
+let lastSavedData = "";
+let lastSavedTime = 0;
 
 function apiFetch(url, options = {}) {
   options.redirect = 'follow';
@@ -245,8 +247,6 @@ function loadConfig() {
     renderCodes(cfg.codes || []);
     renderHolidays(cfg.holidays || []);
     try { restoreFormCache(); } catch (e) { localStorage.removeItem(LS_KEY); }
-    
-    // Tự động load tháng hiện tại khi mở app
     loadMonth(); 
   }).catch(err => alert('Lỗi tải cấu hình:\n' + err.message));
 }
@@ -351,6 +351,7 @@ function onSubmit(e) {
   if (!dsNV.length) { alert('Chọn ít nhất 1 nhân sự'); return; }
   const loai = document.getElementById('loaiCT').value; const isLeave = LEAVE_TYPES.includes(loai);
   const p = { action: 'addEntry', dsNV, loaiCT: loai, maCT: document.getElementById('maCT').value.trim(), hangMuc: document.getElementById('hangMuc').value.trim(), ghiChu: document.getElementById('ghiChu').value.trim() };
+  
   if (isLeave) {
     p.leaveFrom = document.getElementById('leaveFrom').value; p.leaveTo   = document.getElementById('leaveTo').value;
     if (loai === 'NGHIBU') p.leaveHours = parseFloat(document.getElementById('leaveHours').value) || 0;
@@ -370,14 +371,41 @@ function onSubmit(e) {
     }
     if (!hasValid) { alert('Nhập ít nhất 1 cặp (DC đi / CT / DC về)'); return; }
   }
-  const btn = document.getElementById('btnSave'); btn.disabled = true; btn.textContent = '⏳ Đang lưu...';
+
+  // LỚP BẢO VỆ 1: Kiểm tra dữ liệu xem có bấm lưu 2 lần không
+  const dataString = JSON.stringify(p);
+  if (dataString === lastSavedData && Date.now() - lastSavedTime < 30000) {
+    if (!confirm("⚠️ Bạn vừa lưu thông tin giống hệt cách đây vài giây.\nBạn có chắc chắn muốn lưu thêm lần nữa?")) {
+      return;
+    }
+  }
+
+  const btn = document.getElementById('btnSave'); 
+  btn.disabled = true; 
+  btn.textContent = '⏳ Đang lưu...';
   
   apiFetch(API, { method: 'POST', body: JSON.stringify(p) })
   .then(d => {
     if (d.error) throw new Error(d.error);
     document.getElementById('msg').innerHTML = `<span class="text-success fw-bold">✅ ${d.message}</span>`;
-    ['dcDiTu','dcDiDen','gioBD','gioKT','dcVeTu','dcVeDen'].forEach(id => document.getElementById(id).value = '');
-  }).catch(err => alert('Lỗi: ' + err.message)).finally(() => { btn.disabled = false; btn.textContent = '💾 Lưu'; });
+    
+    // LỚP BẢO VỆ 2: Xóa sạch các trường ngày giờ để tránh lưu nhầm lần 2
+    ['dcDiTu','dcDiDen','gioBD','gioKT','dcVeTu','dcVeDen','leaveFrom','leaveTo'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    
+    // Đánh dấu dữ liệu vừa lưu
+    lastSavedData = dataString;
+    lastSavedTime = Date.now();
+
+  }).catch(err => alert('Lỗi: ' + err.message))
+  .finally(() => { 
+    // LỚP BẢO VỆ 3: Đợi 2 giây mới mở lại nút bấm
+    setTimeout(() => {
+      btn.disabled = false; 
+      btn.textContent = '💾 Lưu'; 
+    }, 2000);
+  });
 }
 
 function onTabThang() { if (!cachedMonth) loadMonth(); }
@@ -410,7 +438,6 @@ function renderMonth(data) {
     h += `<th class="${cls}">${label}</th>`;
   }
 
-  // HIỂN THỊ CỘT TỔNG THEO CHẾ ĐỘ LỌC
   if (viewType === 'CATEGORY' || viewType === 'HC') {
     h += `<th class="total-hdr">T.Ngày</th><th class="total-hdr">T.Đêm</th><th class="total-hdr">OT.Ngày</th><th class="total-hdr">OT.Đêm</th><th class="total-hdr">T.HS</th>`;
   } else if (viewType === 'OT_DAY') {
@@ -440,7 +467,6 @@ function renderMonth(data) {
       tr += `<td class="${cls}">${cell}</td>`;
     }
 
-    // ĐIỀN SỐ LIỆU CỘT TỔNG TƯƠNG ỨNG
     if (viewType === 'CATEGORY' || viewType === 'HC') {
       tr += `<td class="total-col">${r.totalDay.toFixed(1)}</td>
              <td class="total-col">${r.totalNight.toFixed(1)}</td>
