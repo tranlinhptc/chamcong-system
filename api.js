@@ -2,8 +2,8 @@
 // API.JS - Wrapper gọi Google Apps Script
 // =====================================================
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyhnEPOy8x9rMJZ75z1ajlWMeaCZAz7lF3z4vWxPg5vXd0OznSBKvSEmZqcuU0lLBZO/exec';
-//const GAS_URL = 'http://127.0.0.1:8000/';
+//const GAS_URL = 'https://script.google.com/macros/s/AKfycbyhnEPOy8x9rMJZ75z1ajlWMeaCZAz7lF3z4vWxPg5vXd0OznSBKvSEmZqcuU0lLBZO/exec';
+const GAS_URL = 'http://127.0.0.1:8000/';
 
 async function callAPI(action, payload = {}) {
   const body = JSON.stringify({ action, ...payload });
